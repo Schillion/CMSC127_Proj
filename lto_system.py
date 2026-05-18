@@ -59,11 +59,61 @@ def prompt(label, required=True, default=None):
             return val if val else None
         print("  ✗ This field is required.")
 
+def choose_from(label, options, required=True, default=None):
+    """
+    Prompt the user to pick from a fixed list of options.
+    Case-insensitive match; returns the canonical casing from `options`.
+    If `default` is given and the user presses Enter, the default is returned.
+    """
+    options_lower = {o.lower(): o for o in options}
+    numbered = "  " + " / ".join(f"[{i+1}] {o}" for i, o in enumerate(options))
+    while True:
+        hint = f" [{default}]" if default is not None else ""
+        print(f"\n  {label}{hint}")
+        print(numbered)
+        raw = input("  Enter number or value: ").strip()
+
+        # blank → use default if available
+        if not raw:
+            if default is not None:
+                return default
+            if not required:
+                return None
+            print("  ✗ This field is required.")
+            continue
+
+        # numeric shortcut
+        if raw.isdigit():
+            idx = int(raw) - 1
+            if 0 <= idx < len(options):
+                return options[idx]
+            print(f"  ✗ Please enter a number between 1 and {len(options)}.")
+            continue
+
+        # text match (case-insensitive)
+        canonical = options_lower.get(raw.lower())
+        if canonical:
+            return canonical
+
+        print(f"  ✗ Invalid choice. Please pick from: {', '.join(options)}")
+
 def confirm(msg="Confirm? (y/n): "):
     return input(f"\n  {msg}").strip().lower() == 'y'
 
 def pause():
     input("\n  Press Enter to continue...")
+
+
+# ─────────────────────────────────────────────
+#  ALLOWED VALUE LISTS
+# ─────────────────────────────────────────────
+
+LICENSE_TYPES    = ["Student Permit", "Non-Professional", "Professional"]
+LICENSE_STATUSES = ["Valid", "Expired", "Suspended", "Revoked"]
+SEX_OPTIONS      = ["Male", "Female"]
+VEHICLE_TYPES    = ["Car", "SUV", "Motorcycle", "Truck", "Van", "Jeepney", "Tricycle"]
+REG_STATUSES     = ["Active", "Expired", "Suspended"]
+VIOLATION_STATUSES = ["Unpaid", "Paid", "Contested"]
 
 
 # ─────────────────────────────────────────────
@@ -93,10 +143,10 @@ def add_driver():
     license_number   = prompt("License Number (e.g. N01-22-123456)")
     full_name        = prompt("Full Name")
     birthdate        = prompt("Birthdate (YYYY-MM-DD)")
-    sex              = prompt("Sex (Male/Female)")
+    sex              = choose_from("Sex", SEX_OPTIONS)
     address          = prompt("Address")
-    license_type     = prompt("License Type (Student Permit / Non-Professional / Professional)")
-    license_status   = prompt("License Status (Valid / Expired / Suspended / Revoked)")
+    license_type     = choose_from("License Type", LICENSE_TYPES)
+    license_status   = choose_from("License Status", LICENSE_STATUSES)
     license_issuance = prompt("License Issuance Date (YYYY-MM-DD)")
     license_expiry   = prompt("License Expiry Date (YYYY-MM-DD)")
 
@@ -137,14 +187,14 @@ def update_driver():
         cols    = [d[0] for d in cur.description]
         current = dict(zip(cols, row))
         print(f"\n  Current record for: {current['full_name']}")
-        print("  (Press Enter to keep current value)")
+        print("  (Press Enter to keep current value)\n")
 
         full_name        = prompt("Full Name",                  required=False, default=current['full_name'])
         birthdate        = prompt("Birthdate (YYYY-MM-DD)",     required=False, default=str(current['birthdate']))
-        sex              = prompt("Sex",                        required=False, default=current['sex'])
+        sex              = choose_from("Sex", SEX_OPTIONS,      required=False, default=current['sex'])
         address          = prompt("Address",                    required=False, default=current['address'])
-        license_type     = prompt("License Type",               required=False, default=current['license_type'])
-        license_status   = prompt("License Status",             required=False, default=current['license_status'])
+        license_type     = choose_from("License Type", LICENSE_TYPES,     required=False, default=current['license_type'])
+        license_status   = choose_from("License Status", LICENSE_STATUSES, required=False, default=current['license_status'])
         license_issuance = prompt("Issuance Date (YYYY-MM-DD)", required=False, default=str(current['license_issuance']))
         license_expiry   = prompt("Expiry Date (YYYY-MM-DD)",   required=False, default=str(current['license_expiry']))
 
@@ -179,13 +229,32 @@ def delete_driver():
             print("  ✗ Driver not found.")
             pause(); return
 
-        print(f"\n  ⚠  This will delete driver: {row[0]} ({license_number})")
-        print("     All associated vehicles and violations will also be affected.")
+        # Count dependents so the user knows what will be removed
+        cur.execute("SELECT COUNT(*) FROM vehicle WHERE license_number = %s", (license_number,))
+        v_count = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM traffic_violation WHERE license_number = %s", (license_number,))
+        tv_count = cur.fetchone()[0]
+
+        print(f"\n  ⚠  About to delete driver: {row[0]} ({license_number})")
+        print(f"     This will also delete {v_count} vehicle(s) and {tv_count} violation record(s).")
+        print("     Registrations linked to those vehicles will be deleted too.")
         if not confirm("Proceed with deletion? (y/n): "): return
 
+        # Delete in dependency order to avoid FK constraint errors
+        # 1. Violations tied to driver's vehicles (plate FK) and to the driver
+        cur.execute("DELETE FROM traffic_violation WHERE license_number = %s", (license_number,))
+        # 2. Registrations tied to driver's vehicles
+        cur.execute("""
+            DELETE vr FROM vehicle_registration vr
+            JOIN vehicle v ON vr.plate_number = v.plate_number
+            WHERE v.license_number = %s
+        """, (license_number,))
+        # 3. Vehicles
+        cur.execute("DELETE FROM vehicle WHERE license_number = %s", (license_number,))
+        # 4. Driver
         cur.execute("DELETE FROM driver WHERE license_number = %s", (license_number,))
         conn.commit()
-        print("  ✓ Driver deleted successfully.")
+        print("  ✓ Driver (and all related records) deleted successfully.")
     except Error as e:
         conn.rollback()
         print(f"  ✗ Error: {e}")
@@ -261,7 +330,7 @@ def add_vehicle():
     plate_number   = prompt("Plate Number")
     engine_number  = prompt("Engine Number")
     chassis_number = prompt("Chassis Number")
-    vehicle_type   = prompt("Vehicle Type (Car / SUV / Motorcycle / Truck / Van / Jeepney / Tricycle)")
+    vehicle_type   = choose_from("Vehicle Type", VEHICLE_TYPES)
     make           = prompt("Make (e.g., Toyota)")
     model          = prompt("Model (e.g., Vios)")
     year           = prompt("Year")
@@ -305,11 +374,11 @@ def update_vehicle():
         cols    = [d[0] for d in cur.description]
         current = dict(zip(cols, row))
         print(f"\n  Current: {current['year']} {current['make']} {current['model']}")
-        print("  (Press Enter to keep current value)")
+        print("  (Press Enter to keep current value)\n")
 
         engine_number  = prompt("Engine Number",  required=False, default=current['engine_number'])
         chassis_number = prompt("Chassis Number", required=False, default=current['chassis_number'])
-        vehicle_type   = prompt("Vehicle Type",   required=False, default=current['vehicle_type'])
+        vehicle_type   = choose_from("Vehicle Type", VEHICLE_TYPES, required=False, default=current['vehicle_type'])
         make           = prompt("Make",           required=False, default=current['make'])
         model          = prompt("Model",          required=False, default=current['model'])
         year           = prompt("Year",           required=False, default=str(current['year']))
@@ -346,12 +415,21 @@ def delete_vehicle():
             print("  ✗ Vehicle not found.")
             pause(); return
 
+        cur.execute("SELECT COUNT(*) FROM vehicle_registration WHERE plate_number = %s", (plate_number,))
+        reg_count = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM traffic_violation WHERE plate_number = %s", (plate_number,))
+        tv_count  = cur.fetchone()[0]
+
         print(f"\n  ⚠  Delete vehicle: {row[2]} {row[0]} {row[1]} ({plate_number})?")
+        print(f"     This will also delete {reg_count} registration(s) and {tv_count} violation record(s).")
         if not confirm("Proceed? (y/n): "): return
 
-        cur.execute("DELETE FROM vehicle WHERE plate_number = %s", (plate_number,))
+        # Delete dependents first
+        cur.execute("DELETE FROM traffic_violation    WHERE plate_number = %s", (plate_number,))
+        cur.execute("DELETE FROM vehicle_registration WHERE plate_number = %s", (plate_number,))
+        cur.execute("DELETE FROM vehicle              WHERE plate_number = %s", (plate_number,))
         conn.commit()
-        print("  ✓ Vehicle deleted successfully.")
+        print("  ✓ Vehicle (and all related records) deleted successfully.")
     except Error as e:
         conn.rollback()
         print(f"  ✗ Error: {e}")
@@ -433,7 +511,7 @@ def add_registration():
     plate_number = prompt("Plate Number")
     reg_date     = prompt("Registration Date (YYYY-MM-DD)")
     exp_date     = prompt("Expiration Date (YYYY-MM-DD)")
-    status       = prompt("Status (Active / Expired / Suspended)")
+    status       = choose_from("Registration Status", REG_STATUSES)
 
     print(f"\n  Adding registration {reg_number} for plate {plate_number}")
     if not confirm(): return
@@ -450,7 +528,7 @@ def add_registration():
         conn.commit()
         print("  ✓ Registration added successfully.")
         if exp_date < str(date.today()):
-            print("  ⚠  Note: Expiry date is in the past — trigger auto-set status to Expired.")
+            print("  ⚠  Note: Expiry date is in the past.")
     except Error as e:
         conn.rollback()
         print(f"  ✗ Error: {e}")
@@ -473,9 +551,9 @@ def update_registration():
         cols    = [d[0] for d in cur.description]
         current = dict(zip(cols, row))
         print(f"\n  Current: Plate {current['plate_number']} | Status: {current['registration_status']}")
-        print("  (Press Enter to keep current value)")
+        print("  (Press Enter to keep current value)\n")
 
-        status   = prompt("Status",                          required=False, default=current['registration_status'])
+        status   = choose_from("Status", REG_STATUSES,          required=False, default=current['registration_status'])
         reg_date = prompt("Registration Date (YYYY-MM-DD)",  required=False, default=str(current['registration_date']))
         exp_date = prompt("Expiration Date (YYYY-MM-DD)",    required=False, default=str(current['expiration_date']))
 
@@ -587,16 +665,37 @@ def violation_menu():
         elif choice == '0': break
         else: print("  ✗ Invalid option.")
 
+# Common LTO violation types — users can still type a custom one via the prompt fallback
+VIOLATION_TYPES = [
+    "Overspeeding",
+    "Reckless Driving",
+    "Beating Red Light",
+    "Illegal Parking",
+    "No Seatbelt",
+    "Driving Without License",
+    "Illegal Counterflow",
+    "Unregistered Vehicle",
+    "Drunk Driving",
+    "Other (type below)",
+]
+
+def prompt_violation_type(default=None):
+    """Pick from common types or type a custom one."""
+    choice = choose_from("Violation Type", VIOLATION_TYPES, required=True, default=default)
+    if choice == "Other (type below)":
+        return prompt("Enter custom violation type")
+    return choice
+
 def add_violation():
     print_header("ADD VIOLATION")
     license_number = prompt("Driver License Number")
     plate_number   = prompt("Vehicle Plate Number")
     date_val       = prompt("Date (YYYY-MM-DD)")
     location       = prompt("Location")
-    violation_type = prompt("Violation Type (e.g. Overspeeding, Reckless Driving)")
+    violation_type = prompt_violation_type()
     fine_amount    = prompt("Fine Amount (PHP)")
     officer        = prompt("Apprehending Officer", required=False)
-    status         = prompt("Status (Unpaid / Paid / Contested)")
+    status         = choose_from("Violation Status", VIOLATION_STATUSES)
 
     print(f"\n  Adding violation: {violation_type} on {date_val}")
     if not confirm(): return
@@ -636,14 +735,14 @@ def update_violation():
         cols    = [d[0] for d in cur.description]
         current = dict(zip(cols, row))
         print(f"\n  Current: {current['violation_type']} | Fine: {current['fine_amount']} | Status: {current['violation_status']}")
-        print("  (Press Enter to keep current value)")
+        print("  (Press Enter to keep current value)\n")
 
-        date_val       = prompt("Date (YYYY-MM-DD)",            required=False, default=str(current['date']))
-        location       = prompt("Location",                     required=False, default=current['location'])
-        violation_type = prompt("Violation Type",               required=False, default=current['violation_type'])
-        fine_amount    = prompt("Fine Amount",                  required=False, default=str(current['fine_amount']))
-        officer        = prompt("Apprehending Officer",         required=False, default=current['apprehending_officer'] or "")
-        status         = prompt("Status (Unpaid/Paid/Contested)", required=False, default=current['violation_status'])
+        date_val       = prompt("Date (YYYY-MM-DD)",  required=False, default=str(current['date']))
+        location       = prompt("Location",           required=False, default=current['location'])
+        violation_type = prompt_violation_type(default=current['violation_type'])
+        fine_amount    = prompt("Fine Amount",        required=False, default=str(current['fine_amount']))
+        officer        = prompt("Apprehending Officer", required=False, default=current['apprehending_officer'] or "")
+        status         = choose_from("Status", VIOLATION_STATUSES, required=False, default=current['violation_status'])
 
         if not confirm("Save changes? (y/n): "): return
 
@@ -764,11 +863,11 @@ def reports_menu():
 def report_drivers_filtered():
     print_header("REPORT: DRIVERS BY FILTER")
     print("  Leave blank to skip a filter.\n")
-    license_type   = prompt("License Type (Student Permit / Non-Professional / Professional)", required=False)
-    license_status = prompt("License Status (Valid / Expired / Suspended / Revoked)",         required=False)
-    sex            = prompt("Sex (Male / Female)",                                             required=False)
-    age_min        = prompt("Minimum Age",                                                     required=False)
-    age_max        = prompt("Maximum Age",                                                     required=False)
+    license_type   = choose_from("License Type",   LICENSE_TYPES,    required=False)
+    license_status = choose_from("License Status", LICENSE_STATUSES, required=False)
+    sex            = choose_from("Sex",            SEX_OPTIONS,      required=False)
+    age_min        = prompt("Minimum Age", required=False)
+    age_max        = prompt("Maximum Age", required=False)
 
     query = """
         SELECT license_number, full_name,
@@ -831,8 +930,6 @@ def report_expired_registrations():
     try:
         conn = get_connection()
         cur  = conn.cursor()
-        # Filter by expiration date only — avoids missing rows where the
-        # status column is stale/inconsistent with the actual expiry date.
         cur.execute("""
             SELECT vr.plate_number, v.make, v.model, v.year,
                    d.full_name, vr.registration_number,
