@@ -5,6 +5,7 @@ CMSC 127 – File Processing and Database Systems
 2nd Semester AY 2025-2026
 """
 
+import re
 import mysql.connector
 from mysql.connector import Error
 from datetime import date
@@ -97,6 +98,57 @@ def choose_from(label, options, required=True, default=None):
 
         print(f"  ✗ Invalid choice. Please pick from: {', '.join(options)}")
 
+def prompt_license_number(label="License Number (e.g. N01-22-123456)", required=True, default=None):
+    """Validates Philippine LTO license number format: X##-##-###### (letter, 2 digits, 2 digits, 6 digits)."""
+    pattern = re.compile(r'^[A-Z]\d{2}-\d{2}-\d{6}$')
+    while True:
+        val = prompt(label, required=required, default=default)
+        if val is None:
+            return val  # not required and blank
+        if pattern.match(val.upper()):
+            return val.upper()
+        print("  ✗ Invalid format. Must be like N01-22-123456 (letter, 2 digits, 2 digits, 6 digits).")
+
+def prompt_date(label, required=True, default=None):
+    """Validates YYYY-MM-DD and checks it's a real calendar date."""
+    while True:
+        val = prompt(label, required=required, default=default)
+        if val is None:
+            return val
+        try:
+            parts = val.split('-')
+            if len(parts) != 3 or len(parts[0]) != 4:
+                raise ValueError
+            date(int(parts[0]), int(parts[1]), int(parts[2]))  # raises if invalid
+            return val
+        except (ValueError, IndexError):
+            print("  ✗ Invalid date. Use YYYY-MM-DD and make sure it's a real date (e.g. 2024-02-30 is not valid).")
+
+def prompt_year(label="Year", required=True, default=None):
+    """Validates a 4-digit year between 1886 and 10 years from now."""
+    current_year = date.today().year
+    while True:
+        val = prompt(label, required=required, default=default)
+        if val is None:
+            return val
+        if re.fullmatch(r'\d{4}', val) and 1886 <= int(val) <= current_year + 10:
+            return val
+        print(f"  ✗ Invalid year. Enter a 4-digit year between 1886 and {current_year + 10}.")
+
+def prompt_fine(label="Fine Amount (PHP)", required=True, default=None):
+    """Validates that the fine is a positive number."""
+    while True:
+        val = prompt(label, required=required, default=default)
+        if val is None:
+            return val
+        try:
+            amount = float(val)
+            if amount >= 0:
+                return val
+            print("  ✗ Fine amount cannot be negative.")
+        except ValueError:
+            print("  ✗ Enter a valid number (e.g. 2000 or 1500.50).")
+
 def confirm(msg="Confirm? (y/n): "):
     return input(f"\n  {msg}").strip().lower() == 'y'
 
@@ -140,15 +192,15 @@ def driver_menu():
 
 def add_driver():
     print_header("ADD DRIVER")
-    license_number   = prompt("License Number (e.g. N01-22-123456)")
+    license_number   = prompt_license_number()
     full_name        = prompt("Full Name")
-    birthdate        = prompt("Birthdate (YYYY-MM-DD)")
+    birthdate        = prompt_date("Birthdate (YYYY-MM-DD)")
     sex              = choose_from("Sex", SEX_OPTIONS)
     address          = prompt("Address")
     license_type     = choose_from("License Type", LICENSE_TYPES)
     license_status   = choose_from("License Status", LICENSE_STATUSES)
-    license_issuance = prompt("License Issuance Date (YYYY-MM-DD)")
-    license_expiry   = prompt("License Expiry Date (YYYY-MM-DD)")
+    license_issuance = prompt_date("License Issuance Date (YYYY-MM-DD)")
+    license_expiry   = prompt_date("License Expiry Date (YYYY-MM-DD)")
 
     print(f"\n  Adding driver: {full_name} ({license_number})")
     if not confirm(): return
@@ -190,13 +242,13 @@ def update_driver():
         print("  (Press Enter to keep current value)\n")
 
         full_name        = prompt("Full Name",                  required=False, default=current['full_name'])
-        birthdate        = prompt("Birthdate (YYYY-MM-DD)",     required=False, default=str(current['birthdate']))
+        birthdate        = prompt_date("Birthdate (YYYY-MM-DD)",     required=False, default=str(current['birthdate']))
         sex              = choose_from("Sex", SEX_OPTIONS,      required=False, default=current['sex'])
         address          = prompt("Address",                    required=False, default=current['address'])
         license_type     = choose_from("License Type", LICENSE_TYPES,     required=False, default=current['license_type'])
         license_status   = choose_from("License Status", LICENSE_STATUSES, required=False, default=current['license_status'])
-        license_issuance = prompt("Issuance Date (YYYY-MM-DD)", required=False, default=str(current['license_issuance']))
-        license_expiry   = prompt("Expiry Date (YYYY-MM-DD)",   required=False, default=str(current['license_expiry']))
+        license_issuance = prompt_date("Issuance Date (YYYY-MM-DD)", required=False, default=str(current['license_issuance']))
+        license_expiry   = prompt_date("Expiry Date (YYYY-MM-DD)",   required=False, default=str(current['license_expiry']))
 
         if not confirm("Save changes? (y/n): "): return
 
@@ -333,7 +385,7 @@ def add_vehicle():
     vehicle_type   = choose_from("Vehicle Type", VEHICLE_TYPES)
     make           = prompt("Make (e.g., Toyota)")
     model          = prompt("Model (e.g., Vios)")
-    year           = prompt("Year")
+    year           = prompt_year()
     color          = prompt("Color")
     license_number = prompt("Owner's License Number")
 
@@ -381,7 +433,7 @@ def update_vehicle():
         vehicle_type   = choose_from("Vehicle Type", VEHICLE_TYPES, required=False, default=current['vehicle_type'])
         make           = prompt("Make",           required=False, default=current['make'])
         model          = prompt("Model",          required=False, default=current['model'])
-        year           = prompt("Year",           required=False, default=str(current['year']))
+        year           = prompt_year(required=False, default=str(current['year']))
         color          = prompt("Color",          required=False, default=current['color'])
         license_number = prompt("Owner License",  required=False, default=current['license_number'])
 
@@ -509,8 +561,8 @@ def add_registration():
     print_header("ADD REGISTRATION")
     reg_number   = prompt("Registration Number")
     plate_number = prompt("Plate Number")
-    reg_date     = prompt("Registration Date (YYYY-MM-DD)")
-    exp_date     = prompt("Expiration Date (YYYY-MM-DD)")
+    reg_date     = prompt_date("Registration Date (YYYY-MM-DD)")
+    exp_date     = prompt_date("Expiration Date (YYYY-MM-DD)")
     status       = choose_from("Registration Status", REG_STATUSES)
 
     print(f"\n  Adding registration {reg_number} for plate {plate_number}")
@@ -554,8 +606,8 @@ def update_registration():
         print("  (Press Enter to keep current value)\n")
 
         status   = choose_from("Status", REG_STATUSES,          required=False, default=current['registration_status'])
-        reg_date = prompt("Registration Date (YYYY-MM-DD)",  required=False, default=str(current['registration_date']))
-        exp_date = prompt("Expiration Date (YYYY-MM-DD)",    required=False, default=str(current['expiration_date']))
+        reg_date = prompt_date("Registration Date (YYYY-MM-DD)",  required=False, default=str(current['registration_date']))
+        exp_date = prompt_date("Expiration Date (YYYY-MM-DD)",    required=False, default=str(current['expiration_date']))
 
         if not confirm("Save changes? (y/n): "): return
 
@@ -690,10 +742,10 @@ def add_violation():
     print_header("ADD VIOLATION")
     license_number = prompt("Driver License Number")
     plate_number   = prompt("Vehicle Plate Number")
-    date_val       = prompt("Date (YYYY-MM-DD)")
+    date_val       = prompt_date("Date (YYYY-MM-DD)")
     location       = prompt("Location")
     violation_type = prompt_violation_type()
-    fine_amount    = prompt("Fine Amount (PHP)")
+    fine_amount    = prompt_fine()
     officer        = prompt("Apprehending Officer", required=False)
     status         = choose_from("Violation Status", VIOLATION_STATUSES)
 
@@ -737,10 +789,10 @@ def update_violation():
         print(f"\n  Current: {current['violation_type']} | Fine: {current['fine_amount']} | Status: {current['violation_status']}")
         print("  (Press Enter to keep current value)\n")
 
-        date_val       = prompt("Date (YYYY-MM-DD)",  required=False, default=str(current['date']))
+        date_val       = prompt_date("Date (YYYY-MM-DD)",  required=False, default=str(current['date']))
         location       = prompt("Location",           required=False, default=current['location'])
         violation_type = prompt_violation_type(default=current['violation_type'])
-        fine_amount    = prompt("Fine Amount",        required=False, default=str(current['fine_amount']))
+        fine_amount    = prompt_fine(required=False, default=str(current['fine_amount']))
         officer        = prompt("Apprehending Officer", required=False, default=current['apprehending_officer'] or "")
         status         = choose_from("Status", VIOLATION_STATUSES, required=False, default=current['violation_status'])
 
