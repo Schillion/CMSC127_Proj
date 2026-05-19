@@ -152,12 +152,15 @@ class FormDialog(tk.Toplevel):
         self._widgets[label][1].config(state="disabled")
 
     def _auto_upper(self, label):
-        var = self._widgets[label][0]
+        var, w = self._widgets[label]
         def _do(*_):
             v = var.get()
             u = v.upper()
             if v != u:
+                pos = w.index(tk.INSERT) if isinstance(w, ttk.Entry) else 0
                 var.set(u)
+                if isinstance(w, ttk.Entry):
+                    w.icursor(pos)
         var.trace_add("write", _do)
 
     def _build_form(self): raise NotImplementedError
