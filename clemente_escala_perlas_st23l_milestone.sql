@@ -107,49 +107,49 @@ INSERT INTO `driver` VALUES
 
 -- Insert Vehicles
 INSERT INTO `vehicle` VALUES
-('ABC123','1NZ-FE 8392012','JH4KA9650MC012345','Car','Toyota','Vios',2022,'Red','N01-22-123456'),
-('ABC124','2GD-FTV 5567123','MMDAA12ZXKH123456','SUV','Toyota','Fortuner',2023,'Black','N01-22-123456'),
-('YTR118','D4HB-6655442','KMHSN81XADU456789','SUV','Hyundai','Santa Fe',2022,'White','N01-22-123456'),
-('XYZ789','ESP150-9988776','MLHJFZ123PK567890','Motorcycle','Honda','Click',2023,'Black','N02-21-654321'),
-('JQX491','1KR-FE 1122445','MHKP3BA2XJK123456','Car','Toyota','Wigo',2023,'White','N02-21-654321'),
-('NVR208','4N15-6677554','MMTHA4CU0KH654321','SUV','Mitsubishi','Montero',2022,'Black','C03-20-112233'),
-('LMN456','4JJ1-TC 3344556','JALB4B165J7001234','Truck','Isuzu','N-Series',2021,'White','C03-20-112233'),
-('DEF321','3A92-2233445','MMSXTA03AEH045678','Car','Mitsubishi','Mirage',2024,'Blue','M04-24-998877'),
-('KLT774','KF18-8899776','MLHJFZ111PK222333','Motorcycle','Honda','ADV160',2024,'Red','M04-24-998877'),
-('GHI654','YS23-7788991','MAJAXXMRKAFD12345','SUV','Ford','Everest',2023,'Gray','R05-20-445566'),
-('JKL987','G3C1E-4455667','ME4JFZ987LK345678','Motorcycle','Yamaha','NMAX',2022,'White','B06-25-778899'),
-('MNO741','1KD-FTV 8899001','JTFHT02P0XH567890','Van','Toyota','Hiace',2024,'Silver','I07-22-334455'),
-('PDM563','6HK1-2233557','JALFTR34XJ7004567','Truck','Isuzu','Forward',2021,'Blue','I07-22-334455'),
-('PQR852','L15Z1-1122334','MRHGM2620NP012345','Car','Honda','City',2022,'Blue','M08-20-667788'),
-('STU963','HR12DE-5566778','MNTCB3D23Z0123456','Car','Nissan','Almera',2023,'Red','N09-23-223344'),
-('XCY902','1KD-FTV 4433556','JTFST22P0MH987654','Van','Toyota','Hiace',2023,'Silver','N09-23-223344'),
-('RTA615','QR25DE-7788992','JN1CV6AR5BM765432','Car','Nissan','Altima',2022,'Gray','L10-21-556677'),
-('VWX147','R150-3344556','LC6PCJG94H0012345','Motorcycle','Suzuki','Raider',2021,'Black','L10-21-556677'),
-('YZA258','G4NA-6677889','KMHJT81BADU123456','SUV','Hyundai','Tucson',2024,'White','B11-19-889900'),
-('BCD369','G4LC-9988776','KNADM412BPT654321','Car','Kia','Soluto',2022,'Gray','C12-24-111222'),
-('BLF338','155FMI-8899002','ME4KC1234LK876543','Motorcycle','Yamaha','Sniper',2023,'Black','C12-24-111222'),
-('EFG111','2ZR-FE 5544332','JTDBU4EE9AJ012345','Car','Toyota','Corolla',2023,'White','N13-23-333444'),
-('EFG112','1.5T-8877665','MAJ6S3KL0MC123456','SUV','Ford','Territory',2024,'Black','N13-23-333444'),
-('UWN451','2.3L-ECO 4455667','1FM5K8GT0MGB12345','SUV','Ford','Explorer',2024,'White','N13-23-333444'),
-('HIJ222','ESP125-2211334','MLHJFZ765LK987654','Motorcycle','Honda','Beat',2022,'Red','C14-21-555666'),
-('KLM333','K10B-6655443','MA3ETDE1S00234567','Car','Suzuki','Celerio',2021,'Blue','L15-25-777888'),
-('QZE129','G4FG-1122335','KNADN4A31C6123456','Car','Kia','Rio',2021,'Blue','L15-25-777888'),
-('NOP444','YD25-4433221','JN1TCS4E0HU567890','Van','Nissan','Urvan',2024,'Silver','T16-25-999000'),
-('QRS555','2NR-FE 7788990','JTMH43FV80D123456','SUV','Toyota','Rush',2023,'Gray','Z17-20-222333'),
-('HSP667','D4CB-6677881','KMJWA37HBCU765432','Van','Hyundai','Starex',2022,'Black','Z17-20-222333'),
-('MKA842','UH125-5566771','LC6PGM987H0012346','Motorcycle','Suzuki','Burgman',2023,'Gray','P18-22-444555'),
-('TUV666','G3F1E-9988001','ME1SG1234LK567890','Motorcycle','Yamaha','Aerox',2023,'Black','P18-22-444555'),
-('WXY777','K20C1-5566443','MRHFK5660DP123456','Car','Honda','Civic',2022,'Red','Q19-24-666777'),
-('BVC773','KF18-4455661','MLHJK1234PK567890','Motorcycle','Honda','PCX160',2024,'Black','Q19-24-666777'),
-('ZAB888','4JJ1-3344221','JALC4W166H7009876','Truck','Isuzu','Elf',2020,'White','N20-21-888999'),
-('DPL390','6WG1-3344552','JALGG8J18H7001122','Truck','Isuzu','Giga',2020,'White','N20-21-888999'),
-('ZRT555','L12B-8877664','MRHDD1830DP345678','Car','Honda','Brio',2024,'Red','L22-23-456456'),
-('WQP731','1KR-VET 2233446','MHKAB12A0LK234567','SUV','Toyota','Raize',2023,'Yellow','C23-20-789789'),
-('CNM284','BC175-7788993','MD2A18AY6PK123456','Motorcycle','Kawasaki','Barako',2022,'Green','B24-22-321321'),
-('REV101','D16W-9988771','JH4DB8590SS123456','Car','Honda','Civic',2020,'Black','C26-20-987987'),
-('LXO918','PUJ-1122334','JEEPNEY1234567890','Jeepney','Sarao','Traditional',2019,'Multicolor','I27-21-147147'),
-('TRI204','TVS175-5566772','TRICYCLE123456789','Tricycle','TVS','King',2021,'Blue','D28-22-258258'),
-('FGE660','PE-VPS 9988772','JM1BPACL0P1234567','Car','Mazda','3',2023,'Red','L29-23-369369');
+('ABC 123','1NZ-FE 8392012','JH4KA9650MC012345','Car','Toyota','Vios',2022,'Red','N01-22-123456'),
+('ABC 124','2GD-FTV 5567123','MMDAA12ZXKH123456','SUV','Toyota','Fortuner',2023,'Black','N01-22-123456'),
+('YTR 118','D4HB-6655442','KMHSN81XADU456789','SUV','Hyundai','Santa Fe',2022,'White','N01-22-123456'),
+('XYZ 789','ESP150-9988776','MLHJFZ123PK567890','Motorcycle','Honda','Click',2023,'Black','N02-21-654321'),
+('JQX 491','1KR-FE 1122445','MHKP3BA2XJK123456','Car','Toyota','Wigo',2023,'White','N02-21-654321'),
+('NVR 208','4N15-6677554','MMTHA4CU0KH654321','SUV','Mitsubishi','Montero',2022,'Black','C03-20-112233'),
+('LMN 456','4JJ1-TC 3344556','JALB4B165J7001234','Truck','Isuzu','N-Series',2021,'White','C03-20-112233'),
+('DEF 321','3A92-2233445','MMSXTA03AEH045678','Car','Mitsubishi','Mirage',2024,'Blue','M04-24-998877'),
+('KLT 774','KF18-8899776','MLHJFZ111PK222333','Motorcycle','Honda','ADV160',2024,'Red','M04-24-998877'),
+('GHI 654','YS23-7788991','MAJAXXMRKAFD12345','SUV','Ford','Everest',2023,'Gray','R05-20-445566'),
+('JKL 987','G3C1E-4455667','ME4JFZ987LK345678','Motorcycle','Yamaha','NMAX',2022,'White','B06-25-778899'),
+('MNO 741','1KD-FTV 8899001','JTFHT02P0XH567890','Van','Toyota','Hiace',2024,'Silver','I07-22-334455'),
+('PDM 563','6HK1-2233557','JALFTR34XJ7004567','Truck','Isuzu','Forward',2021,'Blue','I07-22-334455'),
+('PQR 852','L15Z1-1122334','MRHGM2620NP012345','Car','Honda','City',2022,'Blue','M08-20-667788'),
+('STU 963','HR12DE-5566778','MNTCB3D23Z0123456','Car','Nissan','Almera',2023,'Red','N09-23-223344'),
+('XCY 902','1KD-FTV 4433556','JTFST22P0MH987654','Van','Toyota','Hiace',2023,'Silver','N09-23-223344'),
+('RTA 615','QR25DE-7788992','JN1CV6AR5BM765432','Car','Nissan','Altima',2022,'Gray','L10-21-556677'),
+('VWX 147','R150-3344556','LC6PCJG94H0012345','Motorcycle','Suzuki','Raider',2021,'Black','L10-21-556677'),
+('YZA 258','G4NA-6677889','KMHJT81BADU123456','SUV','Hyundai','Tucson',2024,'White','B11-19-889900'),
+('BCD 369','G4LC-9988776','KNADM412BPT654321','Car','Kia','Soluto',2022,'Gray','C12-24-111222'),
+('BLF 338','155FMI-8899002','ME4KC1234LK876543','Motorcycle','Yamaha','Sniper',2023,'Black','C12-24-111222'),
+('EFG 111','2ZR-FE 5544332','JTDBU4EE9AJ012345','Car','Toyota','Corolla',2023,'White','N13-23-333444'),
+('EFG 112','1.5T-8877665','MAJ6S3KL0MC123456','SUV','Ford','Territory',2024,'Black','N13-23-333444'),
+('UWN 451','2.3L-ECO 4455667','1FM5K8GT0MGB12345','SUV','Ford','Explorer',2024,'White','N13-23-333444'),
+('HIJ 222','ESP125-2211334','MLHJFZ765LK987654','Motorcycle','Honda','Beat',2022,'Red','C14-21-555666'),
+('KLM 333','K10B-6655443','MA3ETDE1S00234567','Car','Suzuki','Celerio',2021,'Blue','L15-25-777888'),
+('QZE 129','G4FG-1122335','KNADN4A31C6123456','Car','Kia','Rio',2021,'Blue','L15-25-777888'),
+('NOP 444','YD25-4433221','JN1TCS4E0HU567890','Van','Nissan','Urvan',2024,'Silver','T16-25-999000'),
+('QRS 555','2NR-FE 7788990','JTMH43FV80D123456','SUV','Toyota','Rush',2023,'Gray','Z17-20-222333'),
+('HSP 667','D4CB-6677881','KMJWA37HBCU765432','Van','Hyundai','Starex',2022,'Black','Z17-20-222333'),
+('MKA 842','UH125-5566771','LC6PGM987H0012346','Motorcycle','Suzuki','Burgman',2023,'Gray','P18-22-444555'),
+('TUV 666','G3F1E-9988001','ME1SG1234LK567890','Motorcycle','Yamaha','Aerox',2023,'Black','P18-22-444555'),
+('WXY 777','K20C1-5566443','MRHFK5660DP123456','Car','Honda','Civic',2022,'Red','Q19-24-666777'),
+('BVC 773','KF18-4455661','MLHJK1234PK567890','Motorcycle','Honda','PCX160',2024,'Black','Q19-24-666777'),
+('ZAB 888','4JJ1-3344221','JALC4W166H7009876','Truck','Isuzu','Elf',2020,'White','N20-21-888999'),
+('DPL 390','6WG1-3344552','JALGG8J18H7001122','Truck','Isuzu','Giga',2020,'White','N20-21-888999'),
+('ZRT 555','L12B-8877664','MRHDD1830DP345678','Car','Honda','Brio',2024,'Red','L22-23-456456'),
+('WQP 731','1KR-VET 2233446','MHKAB12A0LK234567','SUV','Toyota','Raize',2023,'Yellow','C23-20-789789'),
+('CNM 284','BC175-7788993','MD2A18AY6PK123456','Motorcycle','Kawasaki','Barako',2022,'Green','B24-22-321321'),
+('REV 101','D16W-9988771','JH4DB8590SS123456','Car','Honda','Civic',2020,'Black','C26-20-987987'),
+('LXO 918','PUJ-1122334','JEEPNEY1234567890','Jeepney','Sarao','Traditional',2019,'Multicolor','I27-21-147147'),
+('TRI 204','TVS175-5566772','TRICYCLE123456789','Tricycle','TVS','King',2021,'Blue','D28-22-258258'),
+('FGE 660','PE-VPS 9988772','JM1BPACL0P1234567','Car','Mazda','3',2023,'Red','L29-23-369369');
 
 
 -- Insert Traffic Violations 
@@ -157,163 +157,163 @@ INSERT INTO `traffic_violation`
 (`date`,`location`,`fine_amount`,`violation_type`,`apprehending_officer`,`violation_status`,`license_number`,`plate_number`) VALUES
 
 --  VEHICLE: ABC123 | Driver: N01-22-123456 (Von Michael Arellano)
-('2024-02-10','C5 Taguig',1500,'Overspeeding','Officer Cruz','Unpaid','N01-22-123456','ABC123'),
-('2024-02-10','C5 Taguig',1000,'No Seatbelt','Officer Cruz','Unpaid','N01-22-123456','ABC123'),
-('2025-01-15','EDSA Makati',2000,'Swerving','Officer Mendoza','Paid','N01-22-123456','ABC123'),
+('2024-02-10','C5 Taguig',1500,'Overspeeding','Officer Cruz','Unpaid','N01-22-123456','ABC 123'),
+('2024-02-10','C5 Taguig',1000,'No Seatbelt','Officer Cruz','Unpaid','N01-22-123456','ABC 123'),
+('2025-01-15','EDSA Makati',2000,'Swerving','Officer Mendoza','Paid','N01-22-123456','ABC 123'),
 
 --  VEHICLE: YTR118 | Driver: N01-22-123456 (Von Michael Arellano)
-('2025-06-18','BGC Taguig',1000,'Illegal Parking','Officer Santos','Paid','N01-22-123456','YTR118'),
+('2025-06-18','BGC Taguig',1000,'Illegal Parking','Officer Santos','Paid','N01-22-123456','YTR 118'),
 
 --  VEHICLE: XYZ789 | Driver: N02-21-654321 (Maria Erika Dominique Cunanan)
-('2024-05-21','Ortigas Pasig',1000,'Illegal Parking','Officer Santos','Paid','N02-21-654321','XYZ789'),
-('2026-02-14','C5 Pasig',1700,'Overspeeding','Officer Cruz','Unpaid','N02-21-654321','XYZ789'),
-('2026-02-14','C5 Pasig',1000,'No Helmet','Officer Cruz','Unpaid','N02-21-654321','XYZ789'),
+('2024-05-21','Ortigas Pasig',1000,'Illegal Parking','Officer Santos','Paid','N02-21-654321','XYZ 789'),
+('2026-02-14','C5 Pasig',1700,'Overspeeding','Officer Cruz','Unpaid','N02-21-654321','XYZ 789'),
+('2026-02-14','C5 Pasig',1000,'No Helmet','Officer Cruz','Unpaid','N02-21-654321','XYZ 789'),
 
 --  VEHICLE: LMN456 | Driver: C03-20-112233 (Carl Angelo Angcana)
-('2024-08-14','NLEX',2000,'Reckless Driving','Officer Reyes','Unpaid','C03-20-112233','LMN456'),
-('2024-08-14','NLEX',2500,'Overloading','Officer Reyes','Unpaid','C03-20-112233','LMN456'),
+('2024-08-14','NLEX',2000,'Reckless Driving','Officer Reyes','Unpaid','C03-20-112233','LMN 456'),
+('2024-08-14','NLEX',2500,'Overloading','Officer Reyes','Unpaid','C03-20-112233','LMN 456'),
 
 --  VEHICLE: GHI654 | Driver: R05-20-445566 (John Michael Raqueño - Revoked)
-('2025-03-11','Marcos Highway Antipolo',1800,'Overspeeding','Officer Lim','Unpaid','R05-20-445566','GHI654'),
-('2025-03-11','Marcos Highway Antipolo',3000,'Driving Without Valid License','Officer Lim','Unpaid','R05-20-445566','GHI654'),
+('2025-03-11','Marcos Highway Antipolo',1800,'Overspeeding','Officer Lim','Unpaid','R05-20-445566','GHI 654'),
+('2025-03-11','Marcos Highway Antipolo',3000,'Driving Without Valid License','Officer Lim','Unpaid','R05-20-445566','GHI 654'),
 
 --  VEHICLE: DEF321 | Driver: M08-20-667788 (Danielle Lei Araez - Suspended)
-('2026-01-05','Taft Avenue Manila',2500,'Reckless Driving','Officer Ramos','Unpaid','M08-20-667788','DEF321'),
-('2026-01-05','Taft Avenue Manila',1800,'Overspeeding','Officer Ramos','Unpaid','M08-20-667788','DEF321'),
-('2026-02-20','Roxas Blvd Manila',1000,'Disregarding Traffic Sign','Officer Ramos','Unpaid','M08-20-667788','DEF321'),
+('2026-01-05','Taft Avenue Manila',2500,'Reckless Driving','Officer Ramos','Unpaid','M08-20-667788','DEF 321'),
+('2026-01-05','Taft Avenue Manila',1800,'Overspeeding','Officer Ramos','Unpaid','M08-20-667788','DEF 321'),
+('2026-02-20','Roxas Blvd Manila',1000,'Disregarding Traffic Sign','Officer Ramos','Unpaid','M08-20-667788','DEF 321'),
 
 --  VEHICLE: VWX147 | Driver: L10-21-556677 (Ariel Doria)
-('2025-06-05','SLEX Calamba',1500,'Illegal Parking','Officer Santos','Paid','L10-21-556677','VWX147'),
-('2026-03-01','SLEX Laguna',1000,'No Helmet','Officer Garcia','Paid','L10-21-556677','VWX147'),
+('2025-06-05','SLEX Calamba',1500,'Illegal Parking','Officer Santos','Paid','L10-21-556677','VWX 147'),
+('2026-03-01','SLEX Laguna',1000,'No Helmet','Officer Garcia','Paid','L10-21-556677','VWX 147'),
 
 --  VEHICLE: YZA258 | Driver: B11-19-889900 (Jaderick Pabico - Suspended)
-('2024-11-20','Bacolod City',2000,'Reckless Driving','Officer Reyes','Unpaid','B11-19-889900','YZA258'),
-('2024-11-20','Bacolod City',1500,'Overspeeding','Officer Reyes','Unpaid','B11-19-889900','YZA258'),
+('2024-11-20','Bacolod City',2000,'Reckless Driving','Officer Reyes','Unpaid','B11-19-889900','YZA 258'),
+('2024-11-20','Bacolod City',1500,'Overspeeding','Officer Reyes','Unpaid','B11-19-889900','YZA 258'),
 
 --  VEHICLE: HIJ222 | Driver: C14-21-555666 (Aldrin Joseph Hao - Suspended)
-('2024-04-18','Aguinaldo Highway Cavite',1500,'Overspeeding','Officer Santos','Unpaid','C14-21-555666','HIJ222'),
-('2024-04-18','Aguinaldo Highway Cavite',2500,'Reckless Driving','Officer Santos','Unpaid','C14-21-555666','HIJ222'),
+('2024-04-18','Aguinaldo Highway Cavite',1500,'Overspeeding','Officer Santos','Unpaid','C14-21-555666','HIJ 222'),
+('2024-04-18','Aguinaldo Highway Cavite',2500,'Reckless Driving','Officer Santos','Unpaid','C14-21-555666','HIJ 222'),
 
 --  VEHICLE: NOP444 | Driver: T16-25-999000 (Prince Karlo Aragones - Expired)
-('2026-02-01','Tacloban City',2000,'Driving with Expired License','Officer Garcia','Unpaid','T16-25-999000','NOP444'),
+('2026-02-01','Tacloban City',2000,'Driving with Expired License','Officer Garcia','Unpaid','T16-25-999000','NOP 444'),
 
 --  VEHICLE: ZAB888 | Driver: N20-21-888999 (Arvin Kent Jacob)
-('2025-08-14','C5 Pasig',2100,'Reckless Driving','Officer Cruz','Unpaid','N20-21-888999','ZAB888'),
+('2025-08-14','C5 Pasig',2100,'Reckless Driving','Officer Cruz','Unpaid','N20-21-888999','ZAB 888'),
 
 --  VEHICLE: DPL390 | Driver: N20-21-888999 (Arvin Kent Jacob)
-('2025-08-14','C5 Pasig',2500,'Overloading','Officer Cruz','Unpaid','N20-21-888999','DPL390'),
+('2025-08-14','C5 Pasig',2500,'Overloading','Officer Cruz','Unpaid','N20-21-888999','DPL 390'),
 
 --  VEHICLE: REV101 | Driver: C26-20-987987 (Arian Jacildo - Revoked)
-('2024-06-15','Cebu City',3000,'Driving Without Valid License','Officer Cruz','Unpaid','C26-20-987987','REV101'),
-('2024-06-15','Cebu City',2000,'Reckless Driving','Officer Cruz','Unpaid','C26-20-987987','REV101'),
-('2024-06-15','Cebu City',10000,'Unregistered Vehicle','Officer Cruz','Unpaid','C26-20-987987','REV101'),
+('2024-06-15','Cebu City',3000,'Driving Without Valid License','Officer Cruz','Unpaid','C26-20-987987','REV 101'),
+('2024-06-15','Cebu City',2000,'Reckless Driving','Officer Cruz','Unpaid','C26-20-987987','REV 101'),
+('2024-06-15','Cebu City',10000,'Unregistered Vehicle','Officer Cruz','Unpaid','C26-20-987987','REV 101'),
 
 --  VEHICLE: MNO741 | Driver: I07-22-334455 (Reginald Neil Recario)
-('2025-07-19','Iloilo City',900,'No Seatbelt','Officer Tan','Paid','I07-22-334455','MNO741'),
+('2025-07-19','Iloilo City',900,'No Seatbelt','Officer Tan','Paid','I07-22-334455','MNO 741'),
 
 --  VEHICLE: EFG111 | Driver: N13-23-333444 (Zenith Arnejo)
-('2024-01-12','Pasay City',1000,'Illegal Parking','Officer Cruz','Paid','N13-23-333444','EFG111'),
+('2024-01-12','Pasay City',1000,'Illegal Parking','Officer Cruz','Paid','N13-23-333444','EFG 111'),
 
 --  VEHICLE: QRS555 | Driver: Z17-20-222333 (Jamlech Iram Gojo Cruz)
-('2025-02-11','Zamboanga City',1700,'Overspeeding','Officer Lim','Unpaid','Z17-20-222333','QRS555'),
+('2025-02-11','Zamboanga City',1700,'Overspeeding','Officer Lim','Unpaid','Z17-20-222333','QRS 555'),
 
 --  VEHICLE: TUV666 | Driver: P18-22-444555 (Rizza Mercado)
-('2025-03-19','Puerto Princesa',900,'No Helmet','Officer Tan','Paid','P18-22-444555','TUV666'),
+('2025-03-19','Puerto Princesa',900,'No Helmet','Officer Tan','Paid','P18-22-444555','TUV 666'),
 
 --  VEHICLE: WXY777 | Driver: Q19-24-666777 (Aaron Carl Maaño)
-('2025-05-22','Quezon City',1300,'Illegal Parking','Officer Ramos','Paid','Q19-24-666777','WXY777');
+('2025-05-22','Quezon City',1300,'Illegal Parking','Officer Ramos','Paid','Q19-24-666777','WXY 777');
 
 
 -- Insert Vehicle Registrations 
 INSERT INTO `vehicle_registration` VALUES
-('1301-00000012345','Expired','2023-01-01','2024-01-01','ABC123'),
-('1301-00000022346','Expired','2024-01-01','2025-01-01','ABC123'),
-('1301-00000032347','Active','2025-01-01','2026-01-01','ABC123'),
+('1301-00000012345','Expired','2023-01-01','2024-01-01','ABC 123'),
+('1301-00000022346','Expired','2024-01-01','2025-01-01','ABC 123'),
+('1301-00000032347','Active','2025-01-01','2026-01-01','ABC 123'),
 
-('1301-00000099999','Active','2025-01-01','2026-01-01','YTR118'),
+('1301-00000099999','Active','2025-01-01','2026-01-01','YTR 118'),
 
-('1301-00000042348','Active','2025-03-01','2026-03-01','ABC124'),
+('1301-00000042348','Active','2025-03-01','2026-03-01','ABC 124'),
 
-('0403-0000204730','Expired','2024-03-15','2025-03-15','XYZ789'),
-('0403-0000204731','Active','2025-03-15','2026-03-15','XYZ789'),
+('0403-0000204730','Expired','2024-03-15','2025-03-15','XYZ 789'),
+('0403-0000204731','Active','2025-03-15','2026-03-15','XYZ 789'),
 
-('0403-0000204732','Active','2025-06-01','2026-06-01','JQX491'),
+('0403-0000204732','Active','2025-06-01','2026-06-01','JQX 491'),
 
-('0201-0000101111','Active','2025-05-01','2026-05-01','NVR208'),
+('0201-0000101111','Active','2025-05-01','2026-05-01','NVR 208'),
 
-('0201-0000101112','Expired','2024-06-10','2025-06-10','LMN456'),
-('0201-0000101113','Active','2025-06-10','2026-06-10','LMN456'),
+('0201-0000101112','Expired','2024-06-10','2025-06-10','LMN 456'),
+('0201-0000101113','Active','2025-06-10','2026-06-10','LMN 456'),
 
-('0401-0000300001','Active','2025-02-20','2026-02-20','DEF321'),
+('0401-0000300001','Active','2025-02-20','2026-02-20','DEF 321'),
 
-('0401-0000300002','Active','2025-03-10','2026-03-10','KLT774'),
+('0401-0000300002','Active','2025-03-10','2026-03-10','KLT 774'),
 
-('0308-0000400001','Expired','2023-09-01','2024-09-01','GHI654'),
+('0308-0000400001','Expired','2023-09-01','2024-09-01','GHI 654'),
 
-('1501-0000500001','Active','2025-05-12','2026-05-12','JKL987'),
+('1501-0000500001','Active','2025-05-12','2026-05-12','JKL 987'),
 
-('0601-0000600001','Active','2026-01-01','2027-01-01','MNO741'),
+('0601-0000600001','Active','2026-01-01','2027-01-01','MNO 741'),
 
-('0601-0000600002','Active','2025-08-08','2026-08-08','PDM563'),
+('0601-0000600002','Active','2025-08-08','2026-08-08','PDM 563'),
 
-('0701-0000700001','Suspended','2025-08-08','2026-08-08','PQR852'),
+('0701-0000700001','Suspended','2025-08-08','2026-08-08','PQR 852'),
 
-('0403-0000204733','Active','2025-02-01','2026-02-01','STU963'),
+('0403-0000204733','Active','2025-02-01','2026-02-01','STU 963'),
 
-('0403-0000204734','Active','2025-03-01','2026-03-01','XCY902'),
+('0403-0000204734','Active','2025-03-01','2026-03-01','XCY 902'),
 
-('0405-0000800001','Active','2025-05-05','2026-05-05','RTA615'),
+('0405-0000800001','Active','2025-05-05','2026-05-05','RTA 615'),
 
-('0405-0000800002','Active','2025-05-05','2026-05-05','VWX147'),
+('0405-0000800002','Active','2025-05-05','2026-05-05','VWX 147'),
 
-('1001-0000900001','Suspended','2025-01-01','2026-01-01','YZA258'),
+('1001-0000900001','Suspended','2025-01-01','2026-01-01','YZA 258'),
 
-('1301-00000052349','Active','2025-02-02','2026-02-02','BCD369'),
+('1301-00000052349','Active','2025-02-02','2026-02-02','BCD 369'),
 
-('1301-00000052350','Active','2025-03-03','2026-03-03','BLF338'),
+('1301-00000052350','Active','2025-03-03','2026-03-03','BLF 338'),
 
-('1301-00000052351','Expired','2024-02-02','2025-02-02','EFG111'),
-('1301-00000052352','Active','2025-02-02','2026-02-02','EFG111'),
+('1301-00000052351','Expired','2024-02-02','2025-02-02','EFG 111'),
+('1301-00000052352','Active','2025-02-02','2026-02-02','EFG 111'),
 
-('1301-00000052353','Active','2025-03-03','2026-03-03','EFG112'),
+('1301-00000052353','Active','2025-03-03','2026-03-03','EFG 112'),
 
-('1301-00000052354','Active','2025-04-04','2026-04-04','UWN451'),
+('1301-00000052354','Active','2025-04-04','2026-04-04','UWN 451'),
 
-('1302-00000060001','Suspended','2025-04-04','2026-04-04','HIJ222'),
+('1302-00000060001','Suspended','2025-04-04','2026-04-04','HIJ 222'),
 
-('0402-0000700002','Active','2025-05-05','2026-05-05','KLM333'),
+('0402-0000700002','Active','2025-05-05','2026-05-05','KLM 333'),
 
-('0402-0000700003','Active','2025-06-06','2026-06-06','QZE129'),
+('0402-0000700003','Active','2025-06-06','2026-06-06','QZE 129'),
 
-('0801-0000800001','Expired','2024-07-07','2025-07-07','NOP444'),
+('0801-0000800001','Expired','2024-07-07','2025-07-07','NOP 444'),
 
-('0901-0000900002','Active','2025-07-07','2026-07-07','QRS555'),
+('0901-0000900002','Active','2025-07-07','2026-07-07','QRS 555'),
 
-('0901-0000900003','Active','2025-07-07','2026-07-07','HSP667'),
+('0901-0000900003','Active','2025-07-07','2026-07-07','HSP 667'),
 
-('1701-0001000001','Active','2025-01-01','2026-01-01','MKA842'),
+('1701-0001000001','Active','2025-01-01','2026-01-01','MKA 842'),
 
-('1701-0001000002','Active','2025-01-01','2026-01-01','TUV666'),
+('1701-0001000002','Active','2025-01-01','2026-01-01','TUV 666'),
 
-('1601-0001100001','Active','2025-02-02','2026-02-02','WXY777'),
+('1601-0001100001','Active','2025-02-02','2026-02-02','WXY 777'),
 
-('1601-0001100002','Active','2025-03-03','2026-03-03','BVC773'),
+('1601-0001100002','Active','2025-03-03','2026-03-03','BVC 773'),
 
-('1201-0001200001','Active','2025-01-01','2026-01-01','ZAB888'),
+('1201-0001200001','Active','2025-01-01','2026-01-01','ZAB 888'),
 
-('1201-0001200002','Active','2025-01-01','2026-01-01','DPL390'),
+('1201-0001200002','Active','2025-01-01','2026-01-01','DPL 390'),
 
-('0401-0000300003','Active','2025-03-03','2026-03-03','ZRT555'),
+('0401-0000300003','Active','2025-03-03','2026-03-03','ZRT 555'),
 
-('0401-0000300004','Active','2025-04-04','2026-04-04','WQP731'),
+('0401-0000300004','Active','2025-04-04','2026-04-04','WQP 731'),
 
-('0301-0000400002','Active','2025-05-05','2026-05-05','CNM284'),
+('0301-0000400002','Active','2025-05-05','2026-05-05','CNM 284'),
 
-('0101-0000500002','Active','2025-06-06','2026-06-06','LXO918'),
+('0101-0000500002','Active','2025-06-06','2026-06-06','LXO 918'),
 
-('0102-0000500003','Active','2025-07-07','2026-07-07','TRI204'),
+('0102-0000500003','Active','2025-07-07','2026-07-07','TRI 204'),
 
-('1101-0000600003','Active','2025-08-08','2026-08-08','FGE660');
+('1101-0000600003','Active','2025-08-08','2026-08-08','FGE 660');
 
 
 
