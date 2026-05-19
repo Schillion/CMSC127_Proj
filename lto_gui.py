@@ -473,7 +473,7 @@ class BaseTab(ttk.Frame):
         data = [(self.tree.set(k, col), k) for k in self.tree.get_children("")]
         def _sort_key(x):
             try:    return (0, float(x[0]))
-            except: return (1, x[0].lower())
+            except (ValueError, TypeError): return (1, x[0].lower())
         data.sort(key=_sort_key, reverse=not asc)
         for i, (_, k) in enumerate(data):
             self.tree.move(k, "", i)
@@ -511,6 +511,7 @@ class BaseTab(ttk.Frame):
 
     def _db_exec(self, sql, params=()):
         conn = get_connection()
+        cur  = None
         try:
             cur = conn.cursor()
             cur.execute(sql, params)
@@ -518,10 +519,12 @@ class BaseTab(ttk.Frame):
         except Error:
             conn.rollback(); raise
         finally:
-            cur.close(); conn.close()
+            if cur: cur.close()
+            conn.close()
 
     def _db_fetch_one(self, sql, params=()):
         conn = get_connection()
+        cur  = None
         try:
             cur  = conn.cursor()
             cur.execute(sql, params)
@@ -529,16 +532,19 @@ class BaseTab(ttk.Frame):
             cols = [d[0] for d in cur.description] if cur.description else []
             return dict(zip(cols, row)) if row and cols else None
         finally:
-            cur.close(); conn.close()
+            if cur: cur.close()
+            conn.close()
 
     def _db_fetch(self, sql, params=()):
         conn = get_connection()
+        cur  = None
         try:
             cur  = conn.cursor()
             cur.execute(sql, params)
             return cur.fetchall()
         finally:
-            cur.close(); conn.close()
+            if cur: cur.close()
+            conn.close()
 
     def _load_rows(self, keyword, filters=None): raise NotImplementedError
     def on_add(self):    raise NotImplementedError
@@ -909,12 +915,14 @@ class ReportsTab(ttk.Frame):
 
     def _query(self, sql, params=()):
         conn = get_connection()
+        cur  = None
         try:
             cur = conn.cursor()
             cur.execute(sql, params)
             return cur.fetchall()
         finally:
-            cur.close(); conn.close()
+            if cur: cur.close()
+            conn.close()
 
     def _run(self):
         try:
