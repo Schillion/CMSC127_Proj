@@ -246,7 +246,7 @@ class VehicleForm(FormDialog):
             "model":          self._get("Model"),
             "year":           int(year),
             "color":          self._get("Color"),
-            "license_number": owner_lic.upper(),
+            "license_number": owner_lic.upper() if owner_lic else None,
         }
         self.destroy()
 
@@ -327,9 +327,10 @@ class ViolationForm(FormDialog):
             messagebox.showerror("Validation", "Fine amount must be a number.", parent=self); return
         if fine < 0:
             messagebox.showerror("Validation", "Fine amount cannot be negative.", parent=self); return
+        plate = " ".join(self._get("Plate Number").upper().split())
         self.result = {
-            "license_number":       lic.upper(),
-            "plate_number":         " ".join(self._get("Plate Number").upper().split()),
+            "license_number":       lic.upper() if lic else None,
+            "plate_number":         plate if plate else None,
             "date":                 dt,
             "location":             self._get("Location"),
             "violation_type":       self._get("Violation Type"),
@@ -930,6 +931,8 @@ class ReportsTab(ttk.Frame):
     def _rpt_expired_regs(self):
         as_of = self._ask("As of date (YYYY-MM-DD):", default=str(date.today()))
         if not as_of: return
+        if not _valid_date(as_of):
+            messagebox.showerror("Validation", "Date must be in YYYY-MM-DD format.", parent=self); return
         self._show(["Plate","Make","Model","Year","Owner","Reg. No.","Expiry","Status"],
                    self._query("""
             SELECT vr.plate_number, v.make, v.model, v.year,
@@ -961,6 +964,8 @@ class ReportsTab(ttk.Frame):
             messagebox.showerror("Validation", "From date is not a valid date.", parent=self); return
         if not _valid_date(d_to):
             messagebox.showerror("Validation", "To date is not a valid date.", parent=self); return
+        if d_from > d_to:
+            messagebox.showerror("Validation", "From date cannot be after To date.", parent=self); return
         self._show(["ID","Date","Location","Violation","Fine","Officer","Status","Plate"],
                    self._query("""
             SELECT violation_id, date, location, violation_type, fine_amount,
@@ -973,8 +978,8 @@ class ReportsTab(ttk.Frame):
     def _rpt_violations_year(self):
         year = self._ask("Enter year (e.g. 2025):")
         if not year: return
-        if not year.isdigit():
-            messagebox.showerror("Validation", "Year must be a number.", parent=self); return
+        if not _valid_year(year):
+            messagebox.showerror("Validation", f"Year must be a number between 1886 and {date.today().year + 10}.", parent=self); return
         self._show(["Violation Type","Total","Total Fines (PHP)","Paid","Unpaid"],
                    self._query("""
             SELECT violation_type, COUNT(*) AS total, SUM(fine_amount),
