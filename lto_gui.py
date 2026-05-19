@@ -471,7 +471,10 @@ class BaseTab(ttk.Frame):
         asc = not self._sort_asc.get(col, False)
         self._sort_asc[col] = asc
         data = [(self.tree.set(k, col), k) for k in self.tree.get_children("")]
-        data.sort(key=lambda x: x[0].lower(), reverse=not asc)
+        def _sort_key(x):
+            try:    return (0, float(x[0]))
+            except: return (1, x[0].lower())
+        data.sort(key=_sort_key, reverse=not asc)
         for i, (_, k) in enumerate(data):
             self.tree.move(k, "", i)
         arrow = " ▲" if asc else " ▼"
@@ -827,10 +830,12 @@ class ViolationTab(BaseTab):
         try:
             self._db_exec("""
                 UPDATE traffic_violation SET date=%s, location=%s, violation_type=%s,
-                  fine_amount=%s, apprehending_officer=%s, violation_status=%s
+                  fine_amount=%s, apprehending_officer=%s, violation_status=%s,
+                  license_number=%s, plate_number=%s
                 WHERE violation_id=%s
             """, (d["date"], d["location"], d["violation_type"], d["fine_amount"],
-                  d["apprehending_officer"], d["violation_status"], int(vals[0])))
+                  d["apprehending_officer"], d["violation_status"],
+                  d["license_number"], d["plate_number"], int(vals[0])))
             self.refresh()
         except Error as e:
             messagebox.showerror("DB Error", str(e))
