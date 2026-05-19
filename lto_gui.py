@@ -240,6 +240,7 @@ class VehicleForm(FormDialog):
         self._add_field("Owner License No.", default=ex.get("license_number", ""))
         self._set_validator("Year",              _valid_year)
         self._set_validator("Owner License No.", lambda v: _valid_license(v) if v else True)
+        self._auto_upper("Plate Number")
         self._auto_upper("Owner License No.")
         if self._ex:
             self._disable("Plate Number")
@@ -283,6 +284,7 @@ class RegistrationForm(FormDialog):
         self._add_field("Status", "combo", options=REG_STATUSES, default=ex.get("registration_status", "Active"))
         self._set_validator("Registration Date (YYYY-MM-DD)", _valid_date)
         self._set_validator("Expiration Date (YYYY-MM-DD)",   _valid_date)
+        self._auto_upper("Plate Number")
         if self._ex:
             self._disable("Registration Number")
             self._disable("Plate Number")
@@ -331,6 +333,7 @@ class ViolationForm(FormDialog):
         self._set_validator("Date (YYYY-MM-DD)", _valid_date)
         self._set_validator("Fine Amount (PHP)", _valid_fine)
         self._auto_upper("License Number")
+        self._auto_upper("Plate Number")
 
     def _on_save(self):
         lic      = self._get("License Number")
@@ -427,7 +430,7 @@ class BaseTab(ttk.Frame):
                 var = tk.StringVar(value="All")
                 var.trace_add("write", lambda *_: self.refresh())
                 ttk.Combobox(top, textvariable=var, values=["All"] + list(options),
-                             state="readonly", width=11).pack(side=tk.LEFT, padx=(0, 8))
+                             state="readonly", width=14).pack(side=tk.LEFT, padx=(0, 8))
                 self._filter_vars[label] = var
 
         bf = ttk.Frame(self, padding=(8, 4, 8, 2))
@@ -458,8 +461,8 @@ class BaseTab(ttk.Frame):
         sx.pack(side=tk.BOTTOM, fill=tk.X)
         self.tree.pack(fill=tk.BOTH, expand=True)
 
-        self.tree.bind("<Double-1>", lambda _: self.on_edit())
-        self.tree.bind("<Delete>",   lambda _: self.on_delete())
+        self.tree.bind("<Double-1>", lambda e: self.on_edit()   if self.tree.identify_row(e.y) else None)
+        self.tree.bind("<Delete>",   lambda _: self.on_delete() if self.tree.selection()        else None)
 
         self.status = tk.StringVar()
         ttk.Label(self, textvariable=self.status, padding=(8, 2)).pack(anchor=tk.W)
@@ -468,7 +471,7 @@ class BaseTab(ttk.Frame):
         asc = not self._sort_asc.get(col, False)
         self._sort_asc[col] = asc
         data = [(self.tree.set(k, col), k) for k in self.tree.get_children("")]
-        data.sort(reverse=not asc)
+        data.sort(key=lambda x: x[0].lower(), reverse=not asc)
         for i, (_, k) in enumerate(data):
             self.tree.move(k, "", i)
         arrow = " ▲" if asc else " ▼"
@@ -894,7 +897,7 @@ class ReportsTab(ttk.Frame):
             self.tree.column(h, width=140, minwidth=60)
         for row in rows:
             self.tree.insert("", tk.END, values=[str(v) if v is not None else "" for v in row])
-        self.status.set(f"{len(rows)} record(s)")
+        self.status.set("No records found" if not rows else f"{len(rows)} record(s)")
 
     def _ask(self, prompt, default=""):
         return simpledialog.askstring("Input", prompt, initialvalue=default, parent=self) or ""
