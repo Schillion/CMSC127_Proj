@@ -360,6 +360,9 @@ class ViolationForm(FormDialog):
         self._set_validator("Fine Amount (PHP)", _valid_fine)
         self._auto_upper("License Number")
         self._auto_upper("Plate Number")
+        if self._ex:
+            self._disable("License Number")
+            self._disable("Plate Number")
 
     def _on_save(self):
         lic      = self._get("License Number")
