@@ -191,6 +191,10 @@ class DriverForm(FormDialog):
             messagebox.showerror("Validation", "Issuance date is not a valid date.", parent=self); return
         if not _valid_date(vals["Expiry Date (YYYY-MM-DD)"]):
             messagebox.showerror("Validation", "Expiry date is not a valid date.", parent=self); return
+        if vals["Birthdate (YYYY-MM-DD)"] >= str(date.today()):
+            messagebox.showerror("Validation", "Birthdate must be in the past.", parent=self); return
+        if vals["Issuance Date (YYYY-MM-DD)"] > vals["Expiry Date (YYYY-MM-DD)"]:
+            messagebox.showerror("Validation", "Issuance date cannot be after expiry date.", parent=self); return
         self.result = {
             "license_number":   vals["License Number"].upper(),
             "full_name":        vals["Full Name"],
@@ -285,6 +289,9 @@ class RegistrationForm(FormDialog):
             self.result = None; return
         if not _valid_date(self.result["expiration_date"]):
             messagebox.showerror("Validation", "Expiration date is not a valid date.", parent=self)
+            self.result = None; return
+        if self.result["registration_date"] > self.result["expiration_date"]:
+            messagebox.showerror("Validation", "Registration date cannot be after expiration date.", parent=self)
             self.result = None; return
         self.destroy()
 
@@ -919,6 +926,8 @@ class ReportsTab(ttk.Frame):
     def _rpt_vehicles_by_driver(self):
         lic = self._ask("Enter Driver License Number:")
         if not lic: return
+        if not _valid_license(lic):
+            messagebox.showerror("Validation", "License number must be in format X##-##-###### (e.g. N01-22-123456).", parent=self); return
         self._show(["License No.","Driver","Plate","Type","Make","Model","Year","Color"],
                    self._query("""
             SELECT d.license_number, d.full_name, v.plate_number, v.vehicle_type,
@@ -960,6 +969,8 @@ class ReportsTab(ttk.Frame):
         d_from = self._ask("From date (YYYY-MM-DD):")
         d_to   = self._ask("To date (YYYY-MM-DD):")
         if not (lic and d_from and d_to): return
+        if not _valid_license(lic):
+            messagebox.showerror("Validation", "License number must be in format X##-##-###### (e.g. N01-22-123456).", parent=self); return
         if not _valid_date(d_from):
             messagebox.showerror("Validation", "From date is not a valid date.", parent=self); return
         if not _valid_date(d_to):
