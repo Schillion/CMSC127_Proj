@@ -664,29 +664,47 @@ class DriverTab(BaseTab):
         if not vals: return
         lic, name = vals[0], vals[1]
         if not messagebox.askyesno("Confirm Delete",
-                f"Delete driver {name} ({lic})?\n\nOwned vehicles and violations will have their owner reference cleared."):
+                f"Delete driver {name} ({lic})?\n\nAll owned vehicles, registrations, and violations will also be deleted."):
             return
+        conn = None
+        cur  = None
         try:
-            self._db_exec("DELETE FROM driver WHERE license_number=%s", (lic,))
+            conn = get_connection()
+            cur  = conn.cursor()
+            cur.execute("DELETE FROM traffic_violation WHERE license_number=%s", (lic,))
+            cur.execute("""
+                DELETE vr FROM vehicle_registration vr
+                JOIN vehicle v ON vr.plate_number = v.plate_number
+                WHERE v.license_number = %s
+            """, (lic,))
+            cur.execute("DELETE FROM vehicle WHERE license_number=%s", (lic,))
+            cur.execute("DELETE FROM driver WHERE license_number=%s", (lic,))
+            conn.commit()
             self.refresh()
         except Error as e:
+            if conn: conn.rollback()
             messagebox.showerror("DB Error", str(e))
+        finally:
+            if cur:  cur.close()
+            if conn: conn.close()
 
 
 class VehicleTab(BaseTab):
-    columns    = ("plate_number","vehicle_type","make","model","year","color","owner")
-    headings   = ("Plate No.","Type","Make","Model","Year","Color","Owner")
+    columns    = ("plate_number","engine_number","chassis_number","vehicle_type","make","model","year","color","owner")
+    headings   = ("Plate No.","Engine No.","Chassis No.","Type","Make","Model","Year","Color","Owner")
     status_col = None
     filters    = [("Type", VEHICLE_TYPES)]
     col_widths = {
-        "plate_number": 95, "vehicle_type": 100, "make": 100,
+        "plate_number": 95, "engine_number": 120, "chassis_number": 130,
+        "vehicle_type": 100, "make": 100,
         "model": 110, "year": 60, "color": 90, "owner": 200,
     }
 
     def _load_rows(self, kw, filters=None):
         filters = filters or {}
         sql    = """
-            SELECT v.plate_number, v.vehicle_type, v.make, v.model,
+            SELECT v.plate_number, v.engine_number, v.chassis_number,
+                   v.vehicle_type, v.make, v.model,
                    v.year, v.color, d.full_name
             FROM vehicle v
             LEFT JOIN driver d ON v.license_number = d.license_number
@@ -749,13 +767,12 @@ class VehicleTab(BaseTab):
 
 
 class RegistrationTab(BaseTab):
-    columns    = ("registration_number","plate_number","make","model","registration_date","expiration_date","registration_status")
-    headings   = ("Reg. No.","Plate","Make","Model","Reg. Date","Exp. Date","Status")
-    status_col = 6
+    columns    = ("registration_number","plate_number","registration_date","expiration_date","registration_status")
+    headings   = ("Reg. No.","Plate","Reg. Date","Exp. Date","Status")
+    status_col = 4
     filters    = [("Status", REG_STATUSES)]
     col_widths = {
         "registration_number": 170, "plate_number": 85,
-        "make": 90, "model": 100,
         "registration_date": 100, "expiration_date": 100,
         "registration_status": 85,
     }
@@ -763,10 +780,9 @@ class RegistrationTab(BaseTab):
     def _load_rows(self, kw, filters=None):
         filters = filters or {}
         sql    = """
-            SELECT vr.registration_number, vr.plate_number, v.make, v.model,
+            SELECT vr.registration_number, vr.plate_number,
                    vr.registration_date, vr.expiration_date, vr.registration_status
             FROM vehicle_registration vr
-            LEFT JOIN vehicle v ON vr.plate_number = v.plate_number
             WHERE (vr.registration_number LIKE %s OR vr.plate_number LIKE %s)
         """
         params = [f"%{kw}%", f"%{kw}%"]
@@ -824,13 +840,13 @@ class RegistrationTab(BaseTab):
 
 
 class ViolationTab(BaseTab):
-    columns    = ("violation_id","full_name","plate_number","violation_type","date","fine_amount","violation_status")
-    headings   = ("ID","Driver","Plate","Violation","Date","Fine (PHP)","Status")
-    status_col = 6
+    columns    = ("violation_id","full_name","plate_number","violation_type","date","location","fine_amount","violation_status")
+    headings   = ("ID","Driver","Plate","Violation","Date","Location","Fine (PHP)","Status")
+    status_col = 7
     filters    = [("Status", VIOLATION_STATUSES)]
     col_widths = {
         "violation_id": 45, "full_name": 180, "plate_number": 85,
-        "violation_type": 170, "date": 95,
+        "violation_type": 170, "date": 95, "location": 140,
         "fine_amount": 90, "violation_status": 80,
     }
 
@@ -838,7 +854,7 @@ class ViolationTab(BaseTab):
         filters = filters or {}
         sql    = """
             SELECT tv.violation_id, d.full_name, tv.plate_number,
-                   tv.violation_type, tv.date, tv.fine_amount, tv.violation_status
+                   tv.violation_type, tv.date, tv.location, tv.fine_amount, tv.violation_status
             FROM traffic_violation tv
             LEFT JOIN driver d ON tv.license_number = d.license_number
             WHERE (CAST(tv.violation_id AS CHAR) LIKE %s
@@ -1032,6 +1048,7 @@ class ReportsTab(ttk.Frame):
             LEFT JOIN vehicle v ON vr.plate_number = v.plate_number
             LEFT JOIN driver d ON v.license_number = d.license_number
             WHERE vr.expiration_date < %s
+              AND vr.registration_status = 'Expired'
             ORDER BY vr.expiration_date
         """, (as_of,)))
 
@@ -1083,7 +1100,7 @@ class ReportsTab(ttk.Frame):
         """, (int(year),)))
 
     def _rpt_violations_city(self):
-        city = self._ask("City or region keyword:")
+        city = self._ask("City or region keyword (e.g. Laguna, Cavite):")
         if not city: return
         self._show(["Plate","Make","Model","Year","Driver","Location","Violation","Date"],
                    self._query("""
