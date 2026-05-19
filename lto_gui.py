@@ -897,6 +897,7 @@ class ReportsTab(ttk.Frame):
         left.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
         self._key = tk.StringVar(value=REPORTS[0][1])
+        self._key.trace_add("write", lambda *_: self._clear())
         for label, key in REPORTS:
             ttk.Radiobutton(left, text=label, variable=self._key, value=key).pack(
                 anchor=tk.W, pady=3)
@@ -917,6 +918,11 @@ class ReportsTab(ttk.Frame):
 
         self.status = tk.StringVar()
         ttk.Label(self, textvariable=self.status, padding=(10, 2)).pack(anchor=tk.W)
+
+    def _clear(self):
+        self.tree.delete(*self.tree.get_children())
+        self.tree["columns"] = []
+        self.status.set("")
 
     def _show(self, headers, rows):
         self.tree.delete(*self.tree.get_children())
