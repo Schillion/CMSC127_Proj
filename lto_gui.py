@@ -8,10 +8,14 @@ import sys
 
 _FONT = "Helvetica Neue" if sys.platform == "darwin" else ("Segoe UI" if sys.platform == "win32" else "DejaVu Sans")
 
-_LIC_RE = re.compile(r'^[A-Z]\d{2}-\d{2}-\d{6}$')
+_LIC_RE   = re.compile(r'^[A-Z]\d{2}-\d{2}-\d{6}$')
+_PLATE_RE = re.compile(r'^[A-Z]{2,3}\s?\d{3,4}$')
 
 def _valid_license(val):
     return bool(_LIC_RE.match(val.upper()))
+
+def _valid_plate(val):
+    return bool(_PLATE_RE.match(val.upper()))
 
 def _valid_date(val):
     try:
@@ -241,6 +245,7 @@ class VehicleForm(FormDialog):
         self._add_field("Year",              default=ex.get("year", ""))
         self._add_field("Color",             default=ex.get("color", ""))
         self._add_field("Owner License No.", default=ex.get("license_number", ""))
+        self._set_validator("Plate Number",      _valid_plate)
         self._set_validator("Year",              _valid_year)
         self._set_validator("Owner License No.", lambda v: _valid_license(v) if v else True)
         self._auto_upper("Plate Number")
@@ -255,6 +260,9 @@ class VehicleForm(FormDialog):
         required  = ["Plate Number", "Engine Number", "Chassis Number", "Make", "Model", "Year", "Color"]
         if not all(self._get(f) for f in required):
             messagebox.showerror("Validation", "All fields except Owner License No. are required.", parent=self); return
+        plate = self._get("Plate Number")
+        if plate and not _valid_plate(plate):
+            messagebox.showerror("Validation", "Plate number must be in format AAA 1234 or AA 123 (e.g. ABC 1234).", parent=self); return
         if not _valid_year(year):
             messagebox.showerror("Validation", f"Year must be a number between 1886 and {date.today().year + 10}.", parent=self); return
         if owner_lic and not _valid_license(owner_lic):
@@ -285,6 +293,7 @@ class RegistrationForm(FormDialog):
         self._add_field("Registration Date (YYYY-MM-DD)", default=ex.get("registration_date", ""))
         self._add_field("Expiration Date (YYYY-MM-DD)",   default=ex.get("expiration_date", ""))
         self._add_field("Status", "combo", options=REG_STATUSES, default=ex.get("registration_status", "Active"))
+        self._set_validator("Plate Number",                    lambda v: _valid_plate(v) if v else True)
         self._set_validator("Registration Date (YYYY-MM-DD)", _valid_date)
         self._set_validator("Expiration Date (YYYY-MM-DD)",   _valid_date)
         self._auto_upper("Plate Number")
@@ -302,6 +311,9 @@ class RegistrationForm(FormDialog):
         }
         if not all(self.result.values()):
             messagebox.showerror("Validation", "All fields are required.", parent=self)
+            self.result = None; return
+        if not _valid_plate(self.result["plate_number"]):
+            messagebox.showerror("Validation", "Plate number must be in format AAA 1234 or AA 123 (e.g. ABC 1234).", parent=self)
             self.result = None; return
         if not _valid_date(self.result["registration_date"]):
             messagebox.showerror("Validation", "Registration date is not a valid date.", parent=self)
@@ -333,6 +345,7 @@ class ViolationForm(FormDialog):
         self._add_field("Status", "combo", options=VIOLATION_STATUSES,
                         default=ex.get("violation_status", "Unpaid"))
         self._set_validator("License Number",    lambda v: _valid_license(v) if v else True)
+        self._set_validator("Plate Number",      lambda v: _valid_plate(v)   if v else True)
         self._set_validator("Date (YYYY-MM-DD)", _valid_date)
         self._set_validator("Fine Amount (PHP)", _valid_fine)
         self._auto_upper("License Number")
@@ -347,6 +360,9 @@ class ViolationForm(FormDialog):
             messagebox.showerror("Validation", "Date, Location, and Fine Amount are required.", parent=self); return
         if lic and not _valid_license(lic):
             messagebox.showerror("Validation", "License number must be in format X##-##-###### (e.g. N01-22-123456).", parent=self); return
+        plate_val = " ".join(self._get("Plate Number").upper().split())
+        if plate_val and not _valid_plate(plate_val):
+            messagebox.showerror("Validation", "Plate number must be in format AAA 1234 or AA 123 (e.g. ABC 1234).", parent=self); return
         if not _valid_date(dt):
             messagebox.showerror("Validation", "Violation date is not a valid date.", parent=self); return
         try:
