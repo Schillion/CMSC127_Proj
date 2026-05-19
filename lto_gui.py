@@ -8,6 +8,15 @@ import sys
 
 _FONT = "Helvetica Neue" if sys.platform == "darwin" else ("Segoe UI" if sys.platform == "win32" else "DejaVu Sans")
 
+_BG      = "#F1F5F9"
+_SURFACE = "#FFFFFF"
+_PRIMARY = "#2563EB"
+_PRI_DK  = "#1D4ED8"
+_PRI_LT  = "#DBEAFE"
+_TEXT    = "#1E293B"
+_MUTED   = "#64748B"
+_BORDER  = "#CBD5E1"
+
 _LIC_RE   = re.compile(r'^[A-Z]\d{2}-\d{2}-\d{6}$')
 _PLATE_RE = re.compile(r'^[A-Z]{2,3}\s?\d{3,4}$')
 
@@ -57,13 +66,13 @@ VIOLATION_TYPES    = [
 ]
 
 ROW_COLORS = {
-    "Valid":     ("valid",     "#e8f5e9", "#1b5e20"),
-    "Active":    ("active",    "#e8f5e9", "#1b5e20"),
-    "Paid":      ("paid",      "#e8f5e9", "#1b5e20"),
-    "Expired":   ("expired",   "#fff9c4", "#6d4c00"),
-    "Suspended": ("suspended", "#ffe0b2", "#7c3900"),
-    "Revoked":   ("revoked",   "#ffcdd2", "#7f0000"),
-    "Unpaid":    ("unpaid",    "#ffcdd2", "#7f0000"),
+    "Valid":     ("valid",     "#DCFCE7", "#15803D"),
+    "Active":    ("active",    "#DCFCE7", "#15803D"),
+    "Paid":      ("paid",      "#DCFCE7", "#15803D"),
+    "Expired":   ("expired",   "#FEF9C3", "#854D0E"),
+    "Suspended": ("suspended", "#FFEDD5", "#9A3412"),
+    "Revoked":   ("revoked",   "#FEE2E2", "#991B1B"),
+    "Unpaid":    ("unpaid",    "#FEE2E2", "#991B1B"),
 }
 
 
@@ -73,6 +82,7 @@ class FormDialog(tk.Toplevel):
         self.title(title)
         self.resizable(False, False)
         self.grab_set()
+        self.configure(bg=_BG)
         self.result = None
         self._row = 0
         self._widgets = {}
@@ -90,8 +100,8 @@ class FormDialog(tk.Toplevel):
 
         bf = ttk.Frame(self.frame)
         bf.grid(row=self._row, column=0, columnspan=3, sticky=tk.E)
-        ttk.Button(bf, text="Cancel", command=self.destroy).pack(side=tk.LEFT, padx=(0, 6))
-        ttk.Button(bf, text="Save",   command=self._on_save).pack(side=tk.LEFT)
+        ttk.Button(bf, text="Cancel", command=self.destroy,  style="Secondary.TButton").pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(bf, text="Save",   command=self._on_save, style="Accent.TButton").pack(side=tk.LEFT)
 
         self.bind("<Return>", lambda _: self._on_save())
         self.bind("<Escape>", lambda _: self.destroy())
@@ -147,7 +157,7 @@ class FormDialog(tk.Toplevel):
             return
         ok = self._field_validators[label](val)
         ind.config(text="✓" if ok else "✗",
-                   foreground="#2e7d32" if ok else "#c62828")
+                   foreground="#15803D" if ok else "#DC2626")
 
     def _get(self, label):
         return self._widgets[label][0].get().strip()
@@ -440,7 +450,7 @@ class BaseTab(ttk.Frame):
         self.search_var.trace_add("write", lambda *_: self.refresh())
         self._search_entry = ttk.Entry(top, textvariable=self.search_var, width=32)
         self._search_entry.pack(side=tk.LEFT, padx=(5, 2))
-        ttk.Button(top, text="×", width=2,
+        ttk.Button(top, text="×", width=2, style="Secondary.TButton",
                    command=lambda: self.search_var.set("")).pack(side=tk.LEFT)
 
         if self.filters:
@@ -455,10 +465,10 @@ class BaseTab(ttk.Frame):
 
         bf = ttk.Frame(self, padding=(8, 4, 8, 2))
         bf.pack(fill=tk.X)
-        ttk.Button(bf, text="Add",     command=self.on_add).pack(side=tk.LEFT, padx=(0, 4))
-        ttk.Button(bf, text="Edit",    command=self.on_edit).pack(side=tk.LEFT, padx=(0, 4))
-        ttk.Button(bf, text="Delete",  command=self.on_delete).pack(side=tk.LEFT, padx=(0, 4))
-        ttk.Button(bf, text="Refresh", command=self.refresh).pack(side=tk.LEFT)
+        ttk.Button(bf, text="Add",     command=self.on_add,    style="Accent.TButton").pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(bf, text="Edit",    command=self.on_edit,   style="Secondary.TButton").pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(bf, text="Delete",  command=self.on_delete, style="Danger.TButton").pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(bf, text="Refresh", command=self.refresh,   style="Secondary.TButton").pack(side=tk.LEFT)
 
         tf = ttk.Frame(self, padding=(8, 2, 8, 4))
         tf.pack(fill=tk.BOTH, expand=True)
@@ -917,8 +927,8 @@ class ReportsTab(ttk.Frame):
         for label, key in REPORTS:
             ttk.Radiobutton(left, text=label, variable=self._key, value=key).pack(
                 anchor=tk.W, pady=3)
-        ttk.Button(left, text="▶  Run Report", command=self._run).pack(
-            fill=tk.X, pady=(16, 0))
+        ttk.Button(left, text="▶  Run Report", command=self._run,
+                   style="Accent.TButton").pack(fill=tk.X, pady=(16, 0))
 
         right = ttk.Frame(self)
         right.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10), pady=10)
@@ -1096,22 +1106,102 @@ class LTOApp(tk.Tk):
 
         style = ttk.Style(self)
         style.theme_use("clam")
-        style.configure("Treeview", rowheight=26)
+
+        style.configure("TFrame",  background=_BG)
+        style.configure("TLabel",  background=_BG, foreground=_TEXT)
+
+        style.configure("TButton",
+            padding=(12, 6), relief="flat", borderwidth=0,
+            background=_BORDER, foreground=_TEXT, font=(_FONT, 10))
+        style.map("TButton",
+            background=[("active", "#94A3B8"), ("pressed", "#94A3B8")])
+
+        style.configure("Secondary.TButton",
+            padding=(12, 6), relief="flat", borderwidth=0,
+            background=_BORDER, foreground=_TEXT, font=(_FONT, 10))
+        style.map("Secondary.TButton",
+            background=[("active", "#94A3B8"), ("pressed", "#94A3B8")])
+
+        style.configure("Accent.TButton",
+            padding=(12, 6), relief="flat", borderwidth=0,
+            background=_PRIMARY, foreground="white", font=(_FONT, 10))
+        style.map("Accent.TButton",
+            background=[("active", _PRI_DK), ("pressed", _PRI_DK)])
+
+        style.configure("Danger.TButton",
+            padding=(12, 6), relief="flat", borderwidth=0,
+            background="#DC2626", foreground="white", font=(_FONT, 10))
+        style.map("Danger.TButton",
+            background=[("active", "#B91C1C"), ("pressed", "#B91C1C")])
+
+        style.configure("TEntry",
+            padding=(8, 5), fieldbackground=_SURFACE,
+            bordercolor=_BORDER, lightcolor=_BORDER, darkcolor=_BORDER,
+            insertcolor=_TEXT)
+        style.map("TEntry",
+            bordercolor=[("focus", _PRIMARY)],
+            lightcolor=[("focus", _PRIMARY)],
+            darkcolor=[("focus", _PRIMARY)])
+
+        style.configure("TCombobox",
+            padding=(6, 5), fieldbackground=_SURFACE,
+            bordercolor=_BORDER, arrowcolor=_MUTED,
+            lightcolor=_BORDER, darkcolor=_BORDER)
+        style.map("TCombobox",
+            bordercolor=[("focus", _PRIMARY)],
+            fieldbackground=[("readonly", _SURFACE)])
+
+        style.configure("TNotebook",
+            background=_BG, bordercolor=_BORDER, tabmargins=(0, 4, 0, 0))
+        style.configure("TNotebook.Tab",
+            background=_BG, foreground=_MUTED,
+            padding=(18, 9), font=(_FONT, 10), borderwidth=0)
+        style.map("TNotebook.Tab",
+            background=[("selected", _SURFACE)],
+            foreground=[("selected", _PRIMARY)],
+            font=[("selected", (_FONT, 10, "bold"))])
+
+        style.configure("Treeview",
+            background=_SURFACE, fieldbackground=_SURFACE,
+            foreground=_TEXT, rowheight=28,
+            font=(_FONT, 10), bordercolor=_BORDER, relief="flat")
+        style.configure("Treeview.Heading",
+            background=_PRI_LT, foreground=_PRIMARY,
+            font=(_FONT, 10, "bold"), relief="flat")
+        style.map("Treeview",
+            background=[("selected", _PRIMARY)],
+            foreground=[("selected", "white")])
+        style.map("Treeview.Heading",
+            background=[("active", _PRI_LT)])
+
+        style.configure("TScrollbar",
+            background=_BORDER, troughcolor=_BG,
+            bordercolor=_BG, arrowcolor=_MUTED, relief="flat")
+        style.map("TScrollbar",
+            background=[("active", _MUTED)])
+
+        style.configure("TSeparator", background=_BORDER)
+        style.configure("TLabelframe",
+            background=_BG, bordercolor=_BORDER,
+            relief="solid", borderwidth=1)
+        style.configure("TLabelframe.Label",
+            background=_BG, foreground=_MUTED,
+            font=(_FONT, 9, "bold"))
 
         self.update_idletasks()
         sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
         w, h   = 1200, 680
         self.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
 
-        header = tk.Frame(self, bg="#1565C0", height=52)
+        header = tk.Frame(self, bg=_PRIMARY, height=56)
         header.pack(fill=tk.X)
         header.pack_propagate(False)
         tk.Label(header, text="LTO Information Management System",
                  font=(_FONT, 14, "bold"),
-                 bg="#1565C0", fg="white").pack(side=tk.LEFT, padx=16, pady=8)
+                 bg=_PRIMARY, fg="white").pack(side=tk.LEFT, padx=20, pady=10)
         tk.Label(header, text="Land Transportation Office  •  trafficdb",
                  font=(_FONT, 9),
-                 bg="#1565C0", fg="#90CAF9").pack(side=tk.LEFT, pady=14)
+                 bg=_PRIMARY, fg="#BFDBFE").pack(side=tk.LEFT, pady=18)
 
         nb = ttk.Notebook(self)
         nb.pack(fill=tk.BOTH, expand=True, padx=6, pady=(4, 4))
@@ -1127,11 +1217,13 @@ class LTOApp(tk.Tk):
                 tab.after(50, tab._search_entry.focus_set)
         nb.bind("<<NotebookTabChanged>>", _on_tab_change)
 
-        bar = tk.Frame(self, bg="#E3F2FD", height=22)
+        tk.Frame(self, bg=_BORDER, height=1).pack(fill=tk.X, side=tk.BOTTOM)
+        bar = tk.Frame(self, bg=_SURFACE, height=24)
         bar.pack(fill=tk.X, side=tk.BOTTOM)
         bar.pack_propagate(False)
-        tk.Label(bar, text="  Double-click a row to edit  •  Delete key to delete  •  Click column header to sort",
-                 font=(_FONT, 8), bg="#E3F2FD", fg="#555").pack(side=tk.LEFT)
+        tk.Label(bar,
+                 text="  Ctrl+N  Add   •   Ctrl+E  Edit   •   Del  Delete   •   F5  Refresh   •   Double-click or right-click a row to edit",
+                 font=(_FONT, 8), bg=_SURFACE, fg=_MUTED).pack(side=tk.LEFT)
 
 
 if __name__ == "__main__":
