@@ -123,7 +123,9 @@ class FormDialog(tk.Toplevel):
         self._indicators[label] = ind
 
         if widget_type == "entry":
-            w.bind("<FocusOut>", lambda _, l=label: self._check_field(l))
+            w.bind("<FocusOut>",   lambda _, l=label: self._check_field(l))
+            w.bind("<KeyRelease>", lambda _, l=label: self._check_field(l))
+            w.bind("<FocusIn>",    lambda e: e.widget.select_range(0, tk.END))
 
         self._widgets[label] = (var, w)
         return var
@@ -148,6 +150,15 @@ class FormDialog(tk.Toplevel):
 
     def _disable(self, label):
         self._widgets[label][1].config(state="disabled")
+
+    def _auto_upper(self, label):
+        var = self._widgets[label][0]
+        def _do(*_):
+            v = var.get()
+            u = v.upper()
+            if v != u:
+                var.set(u)
+        var.trace_add("write", _do)
 
     def _build_form(self): raise NotImplementedError
     def _on_save(self):    raise NotImplementedError
@@ -175,6 +186,8 @@ class DriverForm(FormDialog):
         self._set_validator("Expiry Date (YYYY-MM-DD)",   _valid_date)
         if self._ex:
             self._disable("License Number")
+        else:
+            self._auto_upper("License Number")
 
     def _on_save(self):
         vals = {k: self._get(k) for k in [
@@ -227,6 +240,7 @@ class VehicleForm(FormDialog):
         self._add_field("Owner License No.", default=ex.get("license_number", ""))
         self._set_validator("Year",              _valid_year)
         self._set_validator("Owner License No.", lambda v: _valid_license(v) if v else True)
+        self._auto_upper("Owner License No.")
         if self._ex:
             self._disable("Plate Number")
             self._disable("Chassis Number")
@@ -316,6 +330,7 @@ class ViolationForm(FormDialog):
         self._set_validator("License Number",    lambda v: _valid_license(v) if v else True)
         self._set_validator("Date (YYYY-MM-DD)", _valid_date)
         self._set_validator("Fine Amount (PHP)", _valid_fine)
+        self._auto_upper("License Number")
 
     def _on_save(self):
         lic      = self._get("License Number")
@@ -477,7 +492,7 @@ class BaseTab(ttk.Frame):
                     tag = ROW_COLORS.get(vals[self.status_col], ("",))[0]
                 self.tree.insert("", tk.END, values=vals,
                                  tags=(tag,) if tag else ())
-            self.status.set(f"{len(rows)} record(s)")
+            self.status.set("No records found" if not rows else f"{len(rows)} record(s)")
         except Error as e:
             messagebox.showerror("DB Error", str(e))
 
