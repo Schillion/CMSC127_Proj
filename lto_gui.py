@@ -422,7 +422,8 @@ class BaseTab(ttk.Frame):
         ttk.Label(top, text="Search:").pack(side=tk.LEFT)
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", lambda *_: self.refresh())
-        ttk.Entry(top, textvariable=self.search_var, width=32).pack(side=tk.LEFT, padx=(5, 2))
+        self._search_entry = ttk.Entry(top, textvariable=self.search_var, width=32)
+        self._search_entry.pack(side=tk.LEFT, padx=(5, 2))
         ttk.Button(top, text="×", width=2,
                    command=lambda: self.search_var.set("")).pack(side=tk.LEFT)
 
@@ -464,8 +465,12 @@ class BaseTab(ttk.Frame):
         sx.pack(side=tk.BOTTOM, fill=tk.X)
         self.tree.pack(fill=tk.BOTH, expand=True)
 
-        self.tree.bind("<Double-1>", lambda e: self.on_edit()   if self.tree.identify_row(e.y) else None)
-        self.tree.bind("<Delete>",   lambda _: self.on_delete() if self.tree.selection()        else None)
+        self.tree.bind("<Double-1>",    lambda e: self.on_edit()   if self.tree.identify_row(e.y) else None)
+        self.tree.bind("<Delete>",      lambda _: self.on_delete() if self.tree.selection()        else None)
+        self.tree.bind("<Control-n>",   lambda _: self.on_add())
+        self.tree.bind("<Control-e>",   lambda _: self.on_edit())
+        self.tree.bind("<F5>",          lambda _: self.refresh())
+        self.tree.bind("<Button-3>",    self._show_context_menu)
 
         self.status = tk.StringVar()
         ttk.Label(self, textvariable=self.status, padding=(8, 2)).pack(anchor=tk.W)
@@ -548,6 +553,16 @@ class BaseTab(ttk.Frame):
         finally:
             if cur: cur.close()
             conn.close()
+
+    def _show_context_menu(self, event):
+        item = self.tree.identify_row(event.y)
+        if not item:
+            return
+        self.tree.selection_set(item)
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="Edit",   command=self.on_edit)
+        menu.add_command(label="Delete", command=self.on_delete)
+        menu.tk_popup(event.x_root, event.y_root)
 
     def _load_rows(self, keyword, filters=None): raise NotImplementedError
     def on_add(self):    raise NotImplementedError
@@ -1057,7 +1072,9 @@ class LTOApp(tk.Tk):
         self.geometry("1200x680")
         self.minsize(960, 520)
 
-        ttk.Style(self).theme_use("clam")
+        style = ttk.Style(self)
+        style.theme_use("clam")
+        style.configure("Treeview", rowheight=26)
 
         self.update_idletasks()
         sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
@@ -1081,6 +1098,12 @@ class LTOApp(tk.Tk):
         nb.add(RegistrationTab(nb), text="  Registrations  ")
         nb.add(ViolationTab(nb),    text="  Violations  ")
         nb.add(ReportsTab(nb),      text="  Reports  ")
+
+        def _on_tab_change(_):
+            tab = nb.nametowidget(nb.select())
+            if hasattr(tab, "_search_entry"):
+                tab.after(50, tab._search_entry.focus_set)
+        nb.bind("<<NotebookTabChanged>>", _on_tab_change)
 
         bar = tk.Frame(self, bg="#E3F2FD", height=22)
         bar.pack(fill=tk.X, side=tk.BOTTOM)
