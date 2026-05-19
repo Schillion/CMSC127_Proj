@@ -6,19 +6,22 @@ from datetime import date
 import re
 import sys
 
+# Pick the best available system font per platform
 _FONT = "Helvetica Neue" if sys.platform == "darwin" else ("Segoe UI" if sys.platform == "win32" else "DejaVu Sans")
 
-_BG      = "#F1F5F9"
-_SURFACE = "#FFFFFF"
-_PRIMARY = "#2563EB"
-_PRI_DK  = "#1D4ED8"
-_PRI_LT  = "#DBEAFE"
-_TEXT    = "#1E293B"
-_MUTED   = "#64748B"
-_BORDER  = "#CBD5E1"
+# ── Color palette (light blue-gray theme) ────────────────────────────────────
+_BG      = "#F1F5F9"   # page background
+_SURFACE = "#FFFFFF"   # card / input background
+_PRIMARY = "#2563EB"   # blue accent
+_PRI_DK  = "#1D4ED8"   # darker blue (hover)
+_PRI_LT  = "#DBEAFE"   # light blue (treeview headings)
+_TEXT    = "#1E293B"   # primary text
+_MUTED   = "#64748B"   # secondary text
+_BORDER  = "#CBD5E1"   # borders and dividers
 
-_LIC_RE   = re.compile(r'^[A-Z]\d{2}-\d{2}-\d{6}$')
-_PLATE_RE = re.compile(r'^[A-Z]{2,3}\s?\d{3,4}$')
+# ── Input validators ──────────────────────────────────────────────────────────
+_LIC_RE   = re.compile(r'^[A-Z]\d{2}-\d{2}-\d{6}$')    # e.g. N01-22-123456
+_PLATE_RE = re.compile(r'^[A-Z]{2,3}\s?\d{3,4}$')       # e.g. ABC 1234
 
 def _valid_license(val):
     return bool(_LIC_RE.match(val.upper()))
@@ -27,6 +30,7 @@ def _valid_plate(val):
     return bool(_PLATE_RE.match(val.upper()))
 
 def _valid_date(val):
+    # Returns True only for a real calendar date in YYYY-MM-DD format
     try:
         parts = val.split('-')
         if len(parts) != 3 or len(parts[0]) != 4:
@@ -47,11 +51,13 @@ def _valid_fine(val):
 
 
 def get_connection():
+    # Opens a new MySQL connection; callers are responsible for closing it
     return mysql.connector.connect(
         host="localhost", user="lto", password="lto", database="trafficdb"
     )
 
 
+# ── Allowed-value lists (used by dropdowns and validators) ────────────────────
 LICENSE_TYPES      = ["Student Permit", "Non-Professional", "Professional"]
 LICENSE_STATUSES   = ["Valid", "Expired", "Suspended", "Revoked"]
 SEX_OPTIONS        = ["Male", "Female"]
@@ -65,6 +71,8 @@ VIOLATION_TYPES    = [
     "Drunk Driving", "Overloading", "Swerving", "Disregarding Traffic Sign",
 ]
 
+# Maps a status string → (ttk tag name, row bg color, row fg color)
+# Used to color-code treeview rows based on status column value
 ROW_COLORS = {
     "Valid":     ("valid",     "#DCFCE7", "#15803D"),
     "Active":    ("active",    "#DCFCE7", "#15803D"),
@@ -76,7 +84,15 @@ ROW_COLORS = {
 }
 
 
+# ── Form dialogs ──────────────────────────────────────────────────────────────
+
 class FormDialog(tk.Toplevel):
+    """Modal dialog base class for Add/Edit forms.
+
+    Subclasses implement _build_form() to add fields via _add_field(),
+    and _on_save() to validate and set self.result before calling destroy().
+    Callers read self.result after wait_window() returns (None = cancelled).
+    """
     def __init__(self, parent, title):
         super().__init__(parent)
         self.title(title)
@@ -120,6 +136,7 @@ class FormDialog(tk.Toplevel):
         self.wait_window()
 
     def _add_field(self, label, widget_type="entry", options=None, default=""):
+        # Adds one labeled row to the form grid; returns the StringVar for the field
         r = self._row; self._row += 1
         ttk.Label(self.frame, text=label + ":").grid(
             row=r, column=0, sticky=tk.W, pady=3, padx=(0, 14))
@@ -145,9 +162,11 @@ class FormDialog(tk.Toplevel):
         return var
 
     def _set_validator(self, label, fn):
+        """Register a validation function for a field; called on every keystroke."""
         self._field_validators[label] = fn
 
     def _check_field(self, label):
+        # Shows ✓/✗ indicator next to the field as the user types
         if label not in self._field_validators:
             return
         val = self._get(label)
@@ -160,12 +179,15 @@ class FormDialog(tk.Toplevel):
                    foreground="#15803D" if ok else "#DC2626")
 
     def _get(self, label):
+        """Return the current stripped string value of a field."""
         return self._widgets[label][0].get().strip()
 
     def _disable(self, label):
+        """Lock a field so the user cannot change it (used for primary keys on edit)."""
         self._widgets[label][1].config(state="disabled")
 
     def _auto_upper(self, label):
+        # Forces the field to uppercase on every keystroke while preserving cursor position
         var, w = self._widgets[label]
         def _do(*_):
             v = var.get()
@@ -177,16 +199,20 @@ class FormDialog(tk.Toplevel):
                     w.icursor(pos)
         var.trace_add("write", _do)
 
-    def _build_form(self): raise NotImplementedError
-    def _on_save(self):    raise NotImplementedError
+    def _build_form(self): raise NotImplementedError  # subclass: call _add_field() here
+    def _on_save(self):    raise NotImplementedError  # subclass: validate then set self.result
 
+
+# ── Per-entity form dialogs ───────────────────────────────────────────────────
 
 class DriverForm(FormDialog):
+    """Add or edit a driver record. Pass existing={...} to pre-populate fields."""
     def __init__(self, parent, existing=None):
         self._ex = existing or {}
         super().__init__(parent, "Edit Driver" if existing else "Add Driver")
 
     def _build_form(self):
+        """Render all driver fields; lock License Number when editing (it's the PK)."""
         ex = self._ex
         self._add_field("License Number",          default=ex.get("license_number", ""))
         self._add_field("Full Name",               default=ex.get("full_name", ""))
@@ -207,6 +233,7 @@ class DriverForm(FormDialog):
             self._auto_upper("License Number")
 
     def _on_save(self):
+        """Validate all driver fields then store cleaned values in self.result."""
         vals = {k: self._get(k) for k in [
             "License Number", "Full Name", "Birthdate (YYYY-MM-DD)", "Sex", "Address",
             "License Type", "License Status",
@@ -240,11 +267,13 @@ class DriverForm(FormDialog):
 
 
 class VehicleForm(FormDialog):
+    """Add or edit a vehicle. Plate and chassis are locked when editing."""
     def __init__(self, parent, existing=None):
         self._ex = existing or {}
         super().__init__(parent, "Edit Vehicle" if existing else "Add Vehicle")
 
     def _build_form(self):
+        """Render vehicle fields; lock Plate Number and Chassis Number when editing."""
         ex = self._ex
         self._add_field("Plate Number",      default=ex.get("plate_number", ""))
         self._add_field("Engine Number",     default=ex.get("engine_number", ""))
@@ -265,6 +294,7 @@ class VehicleForm(FormDialog):
             self._disable("Chassis Number")
 
     def _on_save(self):
+        """Validate vehicle fields; normalize plate spacing and store in self.result."""
         year      = self._get("Year")
         owner_lic = self._get("Owner License No.")
         required  = ["Plate Number", "Engine Number", "Chassis Number", "Make", "Model", "Year", "Color"]
@@ -292,11 +322,13 @@ class VehicleForm(FormDialog):
 
 
 class RegistrationForm(FormDialog):
+    """Add or edit a vehicle registration. Reg. number and plate are locked when editing."""
     def __init__(self, parent, existing=None):
         self._ex = existing or {}
         super().__init__(parent, "Edit Registration" if existing else "Add Registration")
 
     def _build_form(self):
+        """Render registration fields; lock Registration Number and Plate when editing."""
         ex = self._ex
         self._add_field("Registration Number",            default=ex.get("registration_number", ""))
         self._add_field("Plate Number",                   default=ex.get("plate_number", ""))
@@ -312,6 +344,7 @@ class RegistrationForm(FormDialog):
             self._disable("Plate Number")
 
     def _on_save(self):
+        """Validate dates and plate format; ensure reg date is not after expiration date."""
         self.result = {
             "registration_number": self._get("Registration Number"),
             "plate_number":        " ".join(self._get("Plate Number").upper().split()),
@@ -338,11 +371,13 @@ class RegistrationForm(FormDialog):
 
 
 class ViolationForm(FormDialog):
+    """Add or edit a traffic violation. License and plate are locked when editing."""
     def __init__(self, parent, existing=None):
         self._ex = existing or {}
         super().__init__(parent, "Edit Violation" if existing else "Add Violation")
 
     def _build_form(self):
+        """Render violation fields; defaults date to today. License/plate locked on edit."""
         ex = self._ex
         self._add_field("License Number",       default=ex.get("license_number", ""))
         self._add_field("Plate Number",         default=ex.get("plate_number", ""))
@@ -365,6 +400,7 @@ class ViolationForm(FormDialog):
             self._disable("Plate Number")
 
     def _on_save(self):
+        """Validate date, license, plate, and fine amount; store cleaned data in self.result."""
         lic      = self._get("License Number")
         dt       = self._get("Date (YYYY-MM-DD)")
         location = self._get("Location")
@@ -399,10 +435,12 @@ class ViolationForm(FormDialog):
 
 
 class DriversFilterDialog(FormDialog):
+    """Filter dialog used by the Drivers by Filter report."""
     def __init__(self, parent):
         super().__init__(parent, "Filter Drivers")
 
     def _build_form(self):
+        """Show optional dropdowns and age-range fields; any field can be left blank."""
         ttk.Label(self.frame, text="Leave blank to skip a filter.",
                   foreground="gray").grid(row=self._row, column=0, columnspan=3, pady=(0, 6))
         self._row += 1
@@ -413,6 +451,7 @@ class DriversFilterDialog(FormDialog):
         self._add_field("Max Age")
 
     def _on_save(self):
+        """Validate age range and pack non-blank filter values into self.result."""
         age_min = self._get("Min Age") or None
         age_max = self._get("Max Age") or None
         if age_min and (not age_min.isdigit() or int(age_min) < 0):
@@ -431,7 +470,20 @@ class DriversFilterDialog(FormDialog):
         self.destroy()
 
 
+# ── Tab base class & concrete tabs ───────────────────────────────────────────
+
 class BaseTab(ttk.Frame):
+    """Reusable treeview tab with search, dropdown filters, CRUD buttons, and column sorting.
+
+    Subclasses declare:
+      columns    – tuple of column IDs matching the SQL SELECT order
+      headings   – display labels for each column
+      col_widths – pixel widths keyed by column ID
+      status_col – column index whose value drives row color (None = no coloring)
+      filters    – list of (label, options) for dropdown filters in the toolbar
+
+    Subclasses implement: _load_rows(), on_add(), on_edit(), on_delete().
+    """
     columns    = []
     headings   = []
     col_widths = {}
@@ -446,6 +498,7 @@ class BaseTab(ttk.Frame):
         self.refresh()
 
     def _build_ui(self):
+        """Build the search bar, filter dropdowns, CRUD buttons, treeview, and status label."""
         top = ttk.Frame(self, padding=(8, 8, 8, 2))
         top.pack(fill=tk.X)
         ttk.Label(top, text="Search:").pack(side=tk.LEFT)
@@ -505,6 +558,7 @@ class BaseTab(ttk.Frame):
         ttk.Label(self, textvariable=self.status, padding=(8, 2)).pack(anchor=tk.W)
 
     def _sort(self, col):
+        # Client-side sort — toggles asc/desc and reorders existing rows without a DB round-trip
         asc = not self._sort_asc.get(col, False)
         self._sort_asc[col] = asc
         data = [(self.tree.set(k, col), k) for k in self.tree.get_children("")]
@@ -519,6 +573,7 @@ class BaseTab(ttk.Frame):
             self.tree.heading(c, text=h + (arrow if c == col else ""))
 
     def refresh(self):
+        """Reload rows from the DB using the current search keyword and active filters."""
         kw      = self.search_var.get() if hasattr(self, "search_var") else ""
         filters = {lbl: var.get() for lbl, var in self._filter_vars.items()
                    if var.get() != "All"}
@@ -540,13 +595,17 @@ class BaseTab(ttk.Frame):
             messagebox.showerror("DB Error", str(e))
 
     def selected_row(self):
+        """Return the values tuple of the highlighted row, or None if nothing is selected."""
         sel = self.tree.selection()
         if not sel:
             messagebox.showwarning("No Selection", "Please select a record first.")
             return None
         return self.tree.item(sel[0])["values"]
 
+    # ── DB helpers (each opens and closes its own connection) ────────────────
+
     def _db_exec(self, sql, params=()):
+        """Run a single write statement (INSERT / UPDATE / DELETE) in a transaction."""
         conn = get_connection()
         cur  = None
         try:
@@ -560,6 +619,7 @@ class BaseTab(ttk.Frame):
             conn.close()
 
     def _db_fetch_one(self, sql, params=()):
+        """Return a single row as a dict, or None if not found."""
         conn = get_connection()
         cur  = None
         try:
@@ -573,6 +633,7 @@ class BaseTab(ttk.Frame):
             conn.close()
 
     def _db_fetch(self, sql, params=()):
+        """Return all rows as a list of tuples."""
         conn = get_connection()
         cur  = None
         try:
@@ -584,6 +645,7 @@ class BaseTab(ttk.Frame):
             conn.close()
 
     def _show_context_menu(self, event):
+        """Show a right-click popup with Edit and Delete options for the clicked row."""
         item = self.tree.identify_row(event.y)
         if not item:
             return
@@ -600,6 +662,9 @@ class BaseTab(ttk.Frame):
 
 
 class DriverTab(BaseTab):
+    """Tab for browsing and managing driver records (driver table).
+    Rows are color-coded by license_status (Valid=green, Expired=yellow, Suspended/Revoked=red).
+    """
     columns    = ("license_number","full_name","sex","license_type","license_status","license_expiry","address")
     headings   = ("License No.","Full Name","Sex","Type","Status","Expiry","Address")
     status_col = 4
@@ -611,6 +676,7 @@ class DriverTab(BaseTab):
     }
 
     def _load_rows(self, kw, filters=None):
+        """Query driver rows matching the search keyword and optional Status/Type/Sex filters."""
         filters = filters or {}
         sql    = """
             SELECT license_number, full_name, sex, license_type,
@@ -626,6 +692,7 @@ class DriverTab(BaseTab):
         return self._db_fetch(sql, params)
 
     def on_add(self):
+        """Open DriverForm, then INSERT the new driver into the database."""
         dlg = DriverForm(self)
         if not dlg.result: return
         d = dlg.result
@@ -643,6 +710,7 @@ class DriverTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_edit(self):
+        """Fetch the selected driver from DB, open DriverForm pre-filled, then UPDATE."""
         vals = self.selected_row()
         if not vals: return
         existing = self._db_fetch_one("SELECT * FROM driver WHERE license_number=%s", (vals[0],))
@@ -663,6 +731,7 @@ class DriverTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_delete(self):
+        """Cascade-delete the driver and all their violations, registrations, and vehicles."""
         vals = self.selected_row()
         if not vals: return
         lic, name = vals[0], vals[1]
@@ -693,6 +762,7 @@ class DriverTab(BaseTab):
 
 
 class VehicleTab(BaseTab):
+    """Tab for browsing and managing vehicle records (vehicle table)."""
     columns    = ("plate_number","engine_number","chassis_number","vehicle_type","make","model","year","color","owner")
     headings   = ("Plate No.","Engine No.","Chassis No.","Type","Make","Model","Year","Color","Owner")
     status_col = None
@@ -704,6 +774,9 @@ class VehicleTab(BaseTab):
     }
 
     def _load_rows(self, kw, filters=None):
+        """Query vehicles matching the keyword (plate/make/model) with optional Type filter.
+        LEFT JOINs driver so vehicles without an owner still appear.
+        """
         filters = filters or {}
         sql    = """
             SELECT v.plate_number, v.engine_number, v.chassis_number,
@@ -719,6 +792,7 @@ class VehicleTab(BaseTab):
         return self._db_fetch(sql, params)
 
     def on_add(self):
+        """Open VehicleForm, then INSERT the new vehicle into the database."""
         dlg = VehicleForm(self)
         if not dlg.result: return
         d = dlg.result
@@ -736,6 +810,7 @@ class VehicleTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_edit(self):
+        """Fetch the selected vehicle from DB, open VehicleForm pre-filled, then UPDATE."""
         vals = self.selected_row()
         if not vals: return
         existing = self._db_fetch_one("SELECT * FROM vehicle WHERE plate_number=%s", (vals[0],))
@@ -756,6 +831,7 @@ class VehicleTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_delete(self):
+        """Delete the selected vehicle; linked registrations and violations are cascade-deleted by FK."""
         vals = self.selected_row()
         if not vals: return
         plate = vals[0]
@@ -770,6 +846,7 @@ class VehicleTab(BaseTab):
 
 
 class RegistrationTab(BaseTab):
+    """Tab for browsing and managing vehicle registrations (vehicle_registration table)."""
     columns    = ("registration_number","plate_number","registration_date","expiration_date","registration_status")
     headings   = ("Reg. No.","Plate","Reg. Date","Exp. Date","Status")
     status_col = 4
@@ -781,6 +858,7 @@ class RegistrationTab(BaseTab):
     }
 
     def _load_rows(self, kw, filters=None):
+        """Query registrations matching the keyword (reg number or plate) with optional Status filter."""
         filters = filters or {}
         sql    = """
             SELECT vr.registration_number, vr.plate_number,
@@ -794,6 +872,7 @@ class RegistrationTab(BaseTab):
         return self._db_fetch(sql, params)
 
     def on_add(self):
+        """Open RegistrationForm, then INSERT the new registration into the database."""
         dlg = RegistrationForm(self)
         if not dlg.result: return
         d = dlg.result
@@ -810,6 +889,7 @@ class RegistrationTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_edit(self):
+        """Fetch the selected registration, open RegistrationForm pre-filled, then UPDATE."""
         vals = self.selected_row()
         if not vals: return
         existing = self._db_fetch_one(
@@ -830,6 +910,7 @@ class RegistrationTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_delete(self):
+        """Delete the selected registration record after confirmation."""
         vals = self.selected_row()
         if not vals: return
         reg = vals[0]
@@ -843,21 +924,24 @@ class RegistrationTab(BaseTab):
 
 
 class ViolationTab(BaseTab):
-    columns    = ("violation_id","full_name","plate_number","violation_type","date","location","fine_amount","violation_status")
-    headings   = ("ID","Driver","Plate","Violation","Date","Location","Fine (PHP)","Status")
-    status_col = 7
+    """Tab for browsing and managing traffic violations (traffic_violation table)."""
+    columns    = ("violation_id","full_name","plate_number","violation_type","date","location","apprehending_officer","fine_amount","violation_status")
+    headings   = ("ID","Driver","Plate","Violation","Date","Location","Officer","Fine (PHP)","Status")
+    status_col = 8
     filters    = [("Status", VIOLATION_STATUSES)]
     col_widths = {
         "violation_id": 45, "full_name": 180, "plate_number": 85,
         "violation_type": 170, "date": 95, "location": 140,
-        "fine_amount": 90, "violation_status": 80,
+        "apprehending_officer": 140, "fine_amount": 90, "violation_status": 80,
     }
 
     def _load_rows(self, kw, filters=None):
+        """Query violations matching the keyword (ID/driver/plate/type) with optional Status filter."""
         filters = filters or {}
         sql    = """
             SELECT tv.violation_id, d.full_name, tv.plate_number,
-                   tv.violation_type, tv.date, tv.location, tv.fine_amount, tv.violation_status
+                   tv.violation_type, tv.date, tv.location, tv.apprehending_officer,
+                   tv.fine_amount, tv.violation_status
             FROM traffic_violation tv
             LEFT JOIN driver d ON tv.license_number = d.license_number
             WHERE (CAST(tv.violation_id AS CHAR) LIKE %s
@@ -871,6 +955,7 @@ class ViolationTab(BaseTab):
         return self._db_fetch(sql, params)
 
     def on_add(self):
+        """Open ViolationForm, then INSERT the new violation into the database."""
         dlg = ViolationForm(self)
         if not dlg.result: return
         d = dlg.result
@@ -888,6 +973,7 @@ class ViolationTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_edit(self):
+        """Fetch the selected violation, open ViolationForm pre-filled, then UPDATE."""
         vals = self.selected_row()
         if not vals: return
         existing = self._db_fetch_one(
@@ -910,6 +996,7 @@ class ViolationTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_delete(self):
+        """Delete the selected violation record after confirmation."""
         vals = self.selected_row()
         if not vals: return
         vid = vals[0]
@@ -922,6 +1009,9 @@ class ViolationTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
 
+# ── Reports tab ───────────────────────────────────────────────────────────────
+
+# Each entry: (display label, key suffix) — key maps to a _rpt_<key> method
 REPORTS = [
     ("Drivers by Filter",                            "drivers_filter"),
     ("Vehicles by Driver",                           "vehicles_by_driver"),
@@ -933,11 +1023,13 @@ REPORTS = [
 ]
 
 class ReportsTab(ttk.Frame):
+    """Left panel selects a report; Run Report executes it and populates the treeview."""
     def __init__(self, parent):
         super().__init__(parent)
         self._build_ui()
 
     def _build_ui(self):
+        """Build the report selector panel on the left and the results treeview on the right."""
         left = ttk.LabelFrame(self, text="Select Report", padding=12)
         left.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
@@ -965,11 +1057,13 @@ class ReportsTab(ttk.Frame):
         ttk.Label(self, textvariable=self.status, padding=(10, 2)).pack(anchor=tk.W)
 
     def _clear(self):
+        """Wipe the results treeview and status label (called when the report selection changes)."""
         self.tree.delete(*self.tree.get_children())
         self.tree["columns"] = []
         self.status.set("")
 
     def _show(self, headers, rows):
+        """Populate the treeview with the given column headers and result rows."""
         self.tree.delete(*self.tree.get_children())
         self.tree["columns"] = headers
         for h in headers:
@@ -980,9 +1074,11 @@ class ReportsTab(ttk.Frame):
         self.status.set("No records found" if not rows else f"{len(rows)} record(s)")
 
     def _ask(self, prompt, default=""):
+        """Prompt the user for a string value; returns "" if cancelled."""
         return simpledialog.askstring("Input", prompt, initialvalue=default, parent=self) or ""
 
     def _query(self, sql, params=()):
+        """Run a SELECT and return all rows; connection is opened and closed per call."""
         conn = get_connection()
         cur  = None
         try:
@@ -994,12 +1090,14 @@ class ReportsTab(ttk.Frame):
             conn.close()
 
     def _run(self):
+        # Dynamically dispatches to _rpt_<key>() based on the selected radio button
         try:
             getattr(self, f"_rpt_{self._key.get()}")()
         except Error as e:
             messagebox.showerror("DB Error", str(e))
 
     def _rpt_drivers_filter(self):
+        """Show drivers filtered by license type, status, sex, and/or age range."""
         dlg = DriversFilterDialog(self)
         if not dlg.result: return
         f   = dlg.result
@@ -1024,6 +1122,7 @@ class ReportsTab(ttk.Frame):
                    self._query(sql, params))
 
     def _rpt_vehicles_by_driver(self):
+        """List all vehicles owned by a given driver license number."""
         lic = self._ask("Enter Driver License Number:")
         if not lic: return
         if not _valid_license(lic):
@@ -1038,6 +1137,7 @@ class ReportsTab(ttk.Frame):
         """, (lic.upper(),)))
 
     def _rpt_expired_regs(self):
+        """Show registrations that expired on or before a given date and have Expired status."""
         as_of = self._ask("As of date (YYYY-MM-DD):", default=str(date.today()))
         if not as_of: return
         if not _valid_date(as_of):
@@ -1056,6 +1156,7 @@ class ReportsTab(ttk.Frame):
         """, (as_of,)))
 
     def _rpt_inactive_drivers(self):
+        """List all drivers whose license status is Expired, Suspended, or Revoked."""
         self._show(["License No.","Full Name","Sex","Address","Type","Status","Expiry"],
                    self._query("""
             SELECT license_number, full_name, sex, address,
@@ -1066,6 +1167,7 @@ class ReportsTab(ttk.Frame):
         """))
 
     def _rpt_violations_range(self):
+        """Show a driver's violations within a user-specified date range."""
         lic    = self._ask("Driver License Number:")
         d_from = self._ask("From date (YYYY-MM-DD):")
         d_to   = self._ask("To date (YYYY-MM-DD):")
@@ -1088,6 +1190,7 @@ class ReportsTab(ttk.Frame):
         """, (lic.upper(), d_from, d_to)))
 
     def _rpt_violations_year(self):
+        """Summarize violations per type for a year: total count, fines, paid vs unpaid."""
         year = self._ask("Enter year (e.g. 2025):")
         if not year: return
         if not _valid_year(year):
@@ -1103,6 +1206,7 @@ class ReportsTab(ttk.Frame):
         """, (int(year),)))
 
     def _rpt_violations_city(self):
+        """List distinct vehicles apprehended in a city or region matching a keyword."""
         city = self._ask("City or region keyword (e.g. Laguna, Cavite):")
         if not city: return
         self._show(["Plate","Make","Model","Year","Driver","Location","Violation","Date"],
@@ -1117,10 +1221,14 @@ class ReportsTab(ttk.Frame):
         """, (f"%{city}%",)))
 
 
+# ── Root application window ───────────────────────────────────────────────────
+
 class LTOApp(tk.Tk):
+    """Root window. Builds the ttk theme, header bar, and tabbed notebook."""
     def __init__(self):
+        """Configure ttk theme and styles, build the header bar, and wire up all tab panes."""
         super().__init__()
-        self.title("LTO Information Management System")
+        self.title("DRIVE — Driver Records, Information, Violations & Enforcement")
         self.geometry("1200x680")
         self.minsize(960, 520)
 
@@ -1216,7 +1324,7 @@ class LTOApp(tk.Tk):
         header = tk.Frame(self, bg=_PRIMARY, height=56)
         header.pack(fill=tk.X)
         header.pack_propagate(False)
-        tk.Label(header, text="LTO Information Management System",
+        tk.Label(header, text="DRIVE — Driver Records, Information, Violations & Enforcement",
                  font=(_FONT, 14, "bold"),
                  bg=_PRIMARY, fg="white").pack(side=tk.LEFT, padx=20, pady=10)
         tk.Label(header, text="Land Transportation Office  •  trafficdb",
