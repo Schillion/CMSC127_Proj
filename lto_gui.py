@@ -831,18 +831,29 @@ class VehicleTab(BaseTab):
             messagebox.showerror("DB Error", str(e))
 
     def on_delete(self):
-        """Delete the selected vehicle; linked registrations and violations are cascade-deleted by FK."""
+        """Delete the selected vehicle and cascade-delete its registrations and violations."""
         vals = self.selected_row()
         if not vals: return
         plate = vals[0]
         if not messagebox.askyesno("Confirm Delete",
-                f"Delete vehicle {plate}?\n\nLinked violations and registrations will have their plate reference cleared."):
+                f"Delete vehicle {plate}?\n\nAll linked violations and registrations will also be deleted."):
             return
+        conn = None
+        cur  = None
         try:
-            self._db_exec("DELETE FROM vehicle WHERE plate_number=%s", (plate,))
+            conn = get_connection()
+            cur  = conn.cursor()
+            cur.execute("DELETE FROM traffic_violation WHERE plate_number=%s", (plate,))
+            cur.execute("DELETE FROM vehicle_registration WHERE plate_number=%s", (plate,))
+            cur.execute("DELETE FROM vehicle WHERE plate_number=%s", (plate,))
+            conn.commit()
             self.refresh()
         except Error as e:
+            if conn: conn.rollback()
             messagebox.showerror("DB Error", str(e))
+        finally:
+            if cur:  cur.close()
+            if conn: conn.close()
 
 
 class RegistrationTab(BaseTab):
